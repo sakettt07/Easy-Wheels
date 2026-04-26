@@ -1,9 +1,15 @@
+import Footer from "@/components/Footer";
+import Navbar from "@/components/Navbar";
+import PublicHome from "@/components/PublicHome";
+import VehicleSlider from "@/components/VehicleSlider";
 import Image from "next/image";
 
 export default function Home() {
   return (
     <div>
-      Hey its me Saket with a new project
+      <Navbar />
+      <PublicHome />
+      <Footer />
     </div>
   );
 }
