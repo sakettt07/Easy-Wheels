@@ -6,10 +6,10 @@ import AuthModal from './AuthModal'
 import Navbar from './Navbar'
 
 const PublicHome = () => {
-    const [authOpen, setAuthOpen] = useState(true);
+    const [authOpen, setAuthOpen] = useState(false);
     return (
         <>
-            <HeroSection />
+            <HeroSection onAuthRequired={() => setAuthOpen(true)} />
             <VehicleSlider />
             <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
         </>

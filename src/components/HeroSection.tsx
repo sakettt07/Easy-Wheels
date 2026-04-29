@@ -3,7 +3,10 @@ import React from 'react';
 import { motion } from "motion/react";
 import { Bike, Bus, Car, Truck } from 'lucide-react';
 
-const HeroSection = () => {
+type propType = {
+    onAuthRequired: () => void
+}
+const HeroSection = ({ onAuthRequired }: propType) => {
     return (
         <div className='relative min-h-screen w-full overflow-hidden'>
             <div className='absolute inset-0 bg-cover bg-center' style={{
@@ -42,7 +45,7 @@ const HeroSection = () => {
                     <Bus size={30} />
                     <Truck size={30} />
                 </motion.div>
-                <motion.button whileHover={{
+                <motion.button onClick={onAuthRequired} whileHover={{
                     scale: 1.05
                 }}
                     whileTap={{
