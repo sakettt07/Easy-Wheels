@@ -1,4 +1,4 @@
 import nodemailer from "nodemailer";
 
 
-const transporter = nodemailer.crea
+const transporter = nodemailer.createin
