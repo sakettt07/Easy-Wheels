@@ -15,13 +15,15 @@ export async function POST(req: NextRequest) {
             })
         }
         let user = await User.findOne({ email });
-        if (user) {
+        if (user && user.isEmailVerified) {
             return NextResponse.json({
                 message: "Email already exist!"
             }, {
                 status: 400
             })
         }
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
         const hashedPassword = await bcrypt.hash(password, 10);
         user = await User.create({
             name, email, password: hashedPassword
