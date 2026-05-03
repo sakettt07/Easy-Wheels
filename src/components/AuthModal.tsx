@@ -14,7 +14,7 @@ type propType = {
 type stepType = "login" | "signup" | "otp"
 
 const AuthModal = ({ open, onClose }: propType) => {
-    const [step, setStep] = useState<stepType>("otp");
+    const [step, setStep] = useState<stepType>("login");
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -30,6 +30,22 @@ const AuthModal = ({ open, onClose }: propType) => {
                 name, email, password
             });
             setStep("otp");
+            setLoading(false);
+        } catch (error: any) {
+            console.error(error);
+            setErrorMessage(error.response.data.message);
+        }
+        finally {
+            setLoading(false);
+        }
+    }
+    const handleVerifyEmail = async () => {
+        try {
+            setLoading(true);
+            const { data } = await axios.post("/api/auth/verify-email", {
+                email, otp: otp.join("")
+            });
+            setStep("login");
             setLoading(false);
         } catch (error: any) {
             console.error(error);
@@ -211,7 +227,7 @@ const AuthModal = ({ open, onClose }: propType) => {
                                                     />
                                                 ))}
                                             </div>
-                                            <button className='mt-6 w-full h-11 rounded-xl bg-black text-white font-semibold hover:text-gray-900 transition'>Verify and Create account</button>
+                                            <button onClick={handleVerifyEmail} className='mt-6 w-full h-11 rounded-xl bg-black text-white font-semibold hover:text-gray-900 transition'>Verify and Create account</button>
                                         </motion.div>
                                     )}
                                 </div>
