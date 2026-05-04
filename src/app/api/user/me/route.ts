@@ -23,6 +23,6 @@ export async function GET(req: Request) {
     } catch (error) {
         return Response.json({
             message: `"Me api ${error}"`
-        }, { status: 400 })
+        }, { status: 500 })
     }
 }
