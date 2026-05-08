@@ -22,7 +22,6 @@ const AuthModal = ({ open, onClose }: propType) => {
     const [errorMessage, setErrorMessage] = useState("");
     const [otp, setOtp] = useState(["", "", "", "", "", ""])
     const session = useSession();
-    console.log(session);
     const handleSignup = async () => {
         try {
             setLoading(true);

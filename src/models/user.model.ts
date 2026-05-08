@@ -4,12 +4,13 @@ export interface IUser extends Document {
     name: string;
     email: string;
     password?: string;
-    role: "user" | "partner" | "admin"
+    role: "user" | "rider" | "admin"
     isEmailVerified?: boolean;
     otp?: string;
     otpExpiresAt?: Date;
     createdAt: Date;
     updatedAt: Date;
+    riderOnboardingSteps: number
 }
 
 const userSchema = new mongoose.Schema<IUser>({
@@ -28,11 +29,17 @@ const userSchema = new mongoose.Schema<IUser>({
     role: {
         type: String,
         default: "user",
-        enum: ["user", "partner", "admin"]
+        enum: ["user", "rider", "admin"]
     },
     isEmailVerified: {
         type: Boolean,
         default: false
+    },
+    riderOnboardingSteps: {
+        type: Number,
+        min: 0,
+        max: 8,
+        default: 0
     },
     otp: {
         type: String

@@ -2,11 +2,16 @@
 import React from 'react';
 import { motion } from "motion/react";
 import { Bike, Bus, Car, Truck } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/redux/store';
+import { useRouter } from 'next/navigation';
 
 type propType = {
     onAuthRequired: () => void
 }
 const HeroSection = ({ onAuthRequired }: propType) => {
+    const router = useRouter();
+    const { userData } = useSelector((state: RootState) => state.user)
     return (
         <div className='relative min-h-screen w-full overflow-hidden'>
             <div className='absolute inset-0 bg-cover bg-center' style={{
@@ -45,7 +50,7 @@ const HeroSection = ({ onAuthRequired }: propType) => {
                     <Bus size={30} />
                     <Truck size={30} />
                 </motion.div>
-                <motion.button onClick={onAuthRequired} whileHover={{
+                <motion.button onClick={() => { !userData ? onAuthRequired() : router.push("/user/book") }} whileHover={{
                     scale: 1.05
                 }}
                     whileTap={{
