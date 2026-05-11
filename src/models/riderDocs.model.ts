@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 
-interface IPartnerDocs {
+interface IRiderDocs {
     owner: mongoose.Types.ObjectId,
     aadharUrl: string,
     vehicleRC: string,
@@ -12,7 +12,7 @@ interface IPartnerDocs {
     updatedAt: Date
 }
 
-const partnerDocsSchema = new mongoose.Schema<IPartnerDocs>({
+const riderDocsSchema = new mongoose.Schema<IRiderDocs>({
     owner: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
@@ -41,5 +41,5 @@ const partnerDocsSchema = new mongoose.Schema<IPartnerDocs>({
     timestamps: true
 })
 
-const PartnerDocs = mongoose.models.PartnerDocs || mongoose.model("PartnerDocs", partnerDocsSchema);
-export default PartnerDocs;
+const RiderDocs = mongoose.models.RiderDocs || mongoose.model("RiderDocs", riderDocsSchema);
+export default RiderDocs;

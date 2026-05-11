@@ -1,8 +1,9 @@
 import { auth } from "@/auth";
 import uploadOnCloud from "@/lib/cloudinary";
 import connectDb from "@/lib/db";
+import RiderDocs from "@/models/riderDocs.model";
 import User from "@/models/user.model";
-import { form } from "motion/react-client";
+import Vehicle from "@/models/vehicle.model";
 import { NextRequest } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -40,11 +41,37 @@ export async function POST(req: NextRequest) {
                     message: "Aadhar upload failed"
                 }, { status: 500 })
             }
-            // 10:02
+            updatePayload.aadharUrl = url
         }
+        if (license) {
+            const url = await uploadOnCloud(license)
+            if (!url) {
+                return Response.json({
+                    message: "License upload failed"
+                }, { status: 500 })
+            }
+            updatePayload.licenseUrl = url
+        }
+        if (rc) {
+            const url = await uploadOnCloud(rc)
+            if (!url) {
+                return Response.json({
+                    message: "Vehicle RC upload failed"
+                }, { status: 500 })
+            }
+            updatePayload.vehicleRC = url
+        }
+        const riderDocs = await RiderDocs.findOneAndUpdate({ owner: user._id }, { $set: updatePayload }, { upsert: true, new: true })
+
+        if (user.riderOnboardingSteps < 2) {
+            user.riderOnboardingSteps = 2
+        }
+        await user.save();
+        return Response.json(
+            riderDocs, { status: 201 })
     } catch (error) {
         return Response.json({
-            message: `Document upload - ${error}`
+            message: `Rider Document upload - ${error}`
         }, { status: 500 })
     }
 }

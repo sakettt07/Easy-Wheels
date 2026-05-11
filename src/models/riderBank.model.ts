@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
 
 
-interface IPartnerBank {
+interface IRiderBank {
     owner: mongoose.Types.ObjectId,
-    accountHolder: string,
+    accountHolderName: string,
     accountNumber: string,
     ifsc: string,
     upi?: string
@@ -12,13 +12,13 @@ interface IPartnerBank {
     updatedAt: Date
 }
 
-const partnerBankSchema = new mongoose.Schema<IPartnerBank>({
+const riderBankSchema = new mongoose.Schema<IRiderBank>({
     owner: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         required: true
     },
-    accountHolder: {
+    accountHolderName: {
         type: String,
         required: true
     },
@@ -44,5 +44,5 @@ const partnerBankSchema = new mongoose.Schema<IPartnerBank>({
     timestamps: true
 })
 
-const PartnerBank = mongoose.models.PartnerBank || mongoose.model("PartnerBank", partnerBankSchema);
-export default PartnerBank;
+const RiderBank = mongoose.models.RiderBank || mongoose.model("RiderBank", riderBankSchema);
+export default RiderBank;

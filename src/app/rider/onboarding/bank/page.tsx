@@ -65,7 +65,7 @@ export default function BankPage() {
                                 <span className='w-1.5 h-1.5 rounded-full bg-green-400' />Almost Done
                             </span>
                             <h2 className='mt-4 text-lg font-black text-white leading-snug tracking-tight'>Get paid every week, on time.</h2>
-                            <p className='mt-2 text-xs text-white/45 leading-relaxed'>Verified partners receive direct bank payouts every Monday.</p>
+                            <p className='mt-2 text-xs text-white/45 leading-relaxed'>Verified riders receive direct bank payouts every Monday.</p>
 
                             {/* Feature list */}
                             <div className='mt-5 space-y-2.5'>
@@ -88,7 +88,7 @@ export default function BankPage() {
 
                         <div className='rounded-xl border border-white/10 bg-white/5 px-4 py-3'>
                             <p className='text-2xl font-black text-white'>2×</p>
-                            <p className='text-[10px] text-white/35 mt-0.5'>more rides for verified partners</p>
+                            <p className='text-[10px] text-white/35 mt-0.5'>more rides for verified riders</p>
                         </div>
                     </div>
 

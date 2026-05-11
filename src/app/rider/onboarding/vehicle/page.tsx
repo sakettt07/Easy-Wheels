@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Bike, Car, Package, Truck, Zap } from 'lucide-react';
 
 const STEPS = [
-    { step: 1, title: "Vehicle Details", subtitle: "Tell us about your vehicle", image: { bg: "from-zinc-900 to-zinc-700", headline: "Join 5,000+ partners earning with Easy Wheels", sub: "Set up in under 3 minutes and start accepting rides today.", stat: { value: "₹40K+", label: "avg. monthly earnings" }, badge: "Partner Program", scene: "vehicle" } },
+    { step: 1, title: "Vehicle Details", subtitle: "Tell us about your vehicle", image: { bg: "from-zinc-900 to-zinc-700", headline: "Join 5,000+ riders earning with Easy Wheels", sub: "Set up in under 3 minutes and start accepting rides today.", stat: { value: "₹40K+", label: "avg. monthly earnings" }, badge: "Rider Program", scene: "vehicle" } },
     { step: 2, title: "Your Documents", subtitle: "Upload required KYC documents", image: { bg: "from-stone-900 to-neutral-800", headline: "Your data is encrypted end‑to‑end", sub: "Bank-grade security keeps your documents safe and private.", stat: { value: "256-bit", label: "AES encryption" }, badge: "Secure & Private", scene: "docs" } },
-    { step: 3, title: "Bank & Payout", subtitle: "Set up your payout account", image: { bg: "from-neutral-900 to-zinc-800", headline: "Get paid every week, on time.", sub: "Verified partners receive direct bank payouts every Monday.", stat: { value: "2×", label: "more rides for verified" }, badge: "Almost Done", scene: "profile" } },
+    { step: 3, title: "Bank & Payout", subtitle: "Set up your payout account", image: { bg: "from-neutral-900 to-zinc-800", headline: "Get paid every week, on time.", sub: "Verified riders receive direct bank payouts every Monday.", stat: { value: "2×", label: "more rides for verified" }, badge: "Almost Done", scene: "profile" } },
 ]
 
 const vehicles = [
