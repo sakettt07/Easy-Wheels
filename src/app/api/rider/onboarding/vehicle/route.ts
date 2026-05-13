@@ -5,7 +5,7 @@ import Vehicle from "@/models/vehicle.model";
 import { number } from "motion";
 import { NextRequest } from "next/server";
 
-const vehicle_regex = /^[A-Z]{2}[0-9]{1,2}[0-9]{4}$/;
+const vehicle_regex = /^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{4}$/;
 export async function POST(req: Request) {
     try {
         await connectDb();
@@ -22,17 +22,18 @@ export async function POST(req: Request) {
             }, { status: 400 })
         }
         const { type, vehicleNumber, vehicleModel } = await req.json();
-        if (!type || !vehicleModel || vehicleNumber) {
+        if (!type || !vehicleModel || !vehicleNumber) {
             return Response.json({
-                message: "user not found"
+                message: "All fields are required"
             }, { status: 400 })
         }
-        if (vehicle_regex.test(vehicleNumber)) {
+        const cleaned = vehicleNumber.replace(/\s+/g, "").toUpperCase();
+        if (!vehicle_regex.test(cleaned)) {
             return Response.json({
                 message: "Invalid Vehicle Number"
             }, { status: 400 })
         }
-        const vehicleNumberUp = vehicleNumber.toUpperCase();
+        const vehicleNumberUp = cleaned.toUpperCase();
         const duplicateVehicle = await Vehicle.findOne({ vehicleNumber: vehicleNumberUp })
         if (duplicateVehicle) {
             return Response.json({
@@ -41,17 +42,18 @@ export async function POST(req: Request) {
         }
 
         let vehicle = await Vehicle.findOne({
-            owner: session.user?.id
+            owner: user?._id
         })
         if (vehicle) {
             vehicle.type = type
-            vehicle.vehicleNumber = vehicleNumber
+            vehicle.vehicleNumber = vehicleNumberUp
             vehicle.vehicleModel = vehicleModel
             vehicle.status = "pending"
             await vehicle.save()
             return Response.json(vehicle, { status: 200 })
         }
         vehicle = await Vehicle.create({
+            owner: user._id,
             type, vehicleNumber: vehicleNumberUp, vehicleModel
         })
         if (user.riderOnboardingSteps < 1) {

@@ -2,7 +2,8 @@
 import React, { useState } from 'react'
 import { motion } from "motion/react";
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, CheckCircle2, CreditCard, IndianRupee, Smartphone } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, CircleDashed, CreditCard, IndianRupee, Smartphone } from 'lucide-react';
+import axios from 'axios';
 
 const SceneBank = () => (
     <svg viewBox="0 0 280 160" fill="none" className="w-full max-w-[210px]">
@@ -45,6 +46,28 @@ export default function BankPage() {
         mobile: "",
         upi: "",
     })
+    const [errorMessage, setErrorMessage] = useState("");
+    const [loading, setLoading] = useState(false);
+    // 11:07
+    const handleSubmit = async () => {
+        try {
+            setLoading(true);
+            setErrorMessage("");
+            const { data } = await axios.post("/api/rider/onboarding/bank", {
+                accountHolderName: form.accountHolder, accountNumber: form.accountNumber, upi: form.upi, ifsc: form.ifsc, contact: form.mobile
+            })
+            console.log("This is my Data---", data);
+
+        } catch (error: any) {
+            console.log("entered in the catch")
+            setErrorMessage(error.response.data.message)
+            console.log("entered in the catch and error message captured", error.response.data.message)
+            setLoading(false);
+        }
+        finally {
+            setLoading(false);
+        }
+    }
 
     const set = (key: string, val: string) => setForm(f => ({ ...f, [key]: val }))
 
@@ -152,13 +175,14 @@ export default function BankPage() {
                                 <p className='text-[11px] text-zinc-400 leading-relaxed'>Account details are verified before your first payout. Ensure the name matches your Aadhaar.</p>
                             </div>
                         </div>
+                        {errorMessage && (<p className='text-red-500 text-[12px] font-semibold mt-4'>*{errorMessage}</p>)}
 
                         <div className='mt-5'>
                             <motion.button whileHover={canContinue ? { scale: 1.01 } : {}} whileTap={canContinue ? { scale: 0.975 } : {}}
-                                disabled={!canContinue}
-                                onClick={() => alert("Onboarding complete! 🎉")}
+                                disabled={loading}
+                                onClick={handleSubmit}
                                 className='w-full py-3.5 rounded-2xl bg-zinc-900 text-white text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:enabled:bg-black'>
-                                <CheckCircle2 size={15} /> Submit & Complete Onboarding
+                                {loading ? <CircleDashed className='text-white animate-spin' /> : "Submit & Complete onboarding"} <ArrowRight size={14} />
                             </motion.button>
                             <p className='text-center text-[10px] text-zinc-300 mt-2.5'>Your data is encrypted and secure</p>
                         </div>

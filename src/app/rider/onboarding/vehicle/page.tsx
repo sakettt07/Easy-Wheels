@@ -2,7 +2,8 @@
 import React, { useState } from 'react'
 import { AnimatePresence, motion } from "motion/react";
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ArrowRight, Bike, Car, Package, Truck, Zap } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Bike, Car, CircleDashed, Package, Truck, Zap } from 'lucide-react';
+import axios from 'axios';
 
 const STEPS = [
     { step: 1, title: "Vehicle Details", subtitle: "Tell us about your vehicle", image: { bg: "from-zinc-900 to-zinc-700", headline: "Join 5,000+ riders earning with Easy Wheels", sub: "Set up in under 3 minutes and start accepting rides today.", stat: { value: "₹40K+", label: "avg. monthly earnings" }, badge: "Rider Program", scene: "vehicle" } },
@@ -14,7 +15,7 @@ const vehicles = [
     { id: "bike", label: "Bike", icon: Bike, desc: "2W" },
     { id: "auto", label: "Auto", icon: Car, desc: "3W" },
     { id: "car", label: "Car", icon: Car, desc: "4W" },
-    { id: "loading", label: "Loader", icon: Package, desc: "Goods" },
+    { id: "loader", label: "Loader", icon: Package, desc: "Goods" },
     { id: "traveller", label: "Traveller", icon: Truck, desc: "Family" },
     { id: "ev", label: "EV", icon: Zap, desc: "Eco" },
 ]
@@ -45,9 +46,29 @@ export default function VehiclePage() {
     const [vehicleType, setVehicleType] = useState("")
     const [vehicleNumber, setVehicleNumber] = useState("")
     const [vehicleModel, setVehicleModel] = useState("")
+    const [errorMessage, setErrorMessage] = useState("");
+    const [loading, setLoading] = useState(false);
 
     const canContinue = vehicleType && vehicleNumber.trim() && vehicleModel.trim()
-    const meta = STEPS[0]
+    const meta = STEPS[0];
+    const handleVehicle = async () => {
+        setErrorMessage("");
+        try {
+            setLoading(true);
+            const { data } = await axios.post("/api/rider/onboarding/vehicle", {
+                type: vehicleType, vehicleNumber, vehicleModel
+            })
+            setLoading(false);
+            router.push('/rider/onboarding/documents');
+        } catch (error: any) {
+            setErrorMessage(error.response.data.message);
+            setLoading(false);
+
+        }
+        finally {
+            setLoading(false);
+        }
+    }
 
     return (
         <div className='min-h-screen bg-[#f5f5f3] flex items-center justify-center p-4 pt-20'>
@@ -113,8 +134,10 @@ export default function VehiclePage() {
                                 </div>
                             </div>
                             <div>
+
                                 <label className={labelCls}>Vehicle Number</label>
                                 <input className={`${inputCls} uppercase tracking-widest font-semibold`} placeholder='DL 9S AR 3456' value={vehicleNumber} onChange={e => setVehicleNumber(e.target.value.toUpperCase())} />
+                                {errorMessage && (<p className='text-red-500 text-[12px] font-semibold'>*{errorMessage}</p>)}
                             </div>
                             <div>
                                 <label className={labelCls}>Vehicle Model</label>
@@ -124,9 +147,9 @@ export default function VehiclePage() {
 
                         <div className='mt-5'>
                             <motion.button whileHover={canContinue ? { scale: 1.01 } : {}} whileTap={canContinue ? { scale: 0.975 } : {}}
-                                disabled={!canContinue} onClick={() => router.push('/rider/onboarding/documents')}
+                                disabled={loading} onClick={handleVehicle}
                                 className='w-full py-3.5 rounded-2xl bg-zinc-900 text-white text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:enabled:bg-black'>
-                                Continue to Documents <ArrowRight size={14} />
+                                {loading ? <CircleDashed className='text-white animate-spin' /> : "Continue to Documents"} <ArrowRight size={14} />
                             </motion.button>
                             <p className='text-center text-[10px] text-zinc-300 mt-2.5'>Your data is encrypted and secure</p>
                         </div>

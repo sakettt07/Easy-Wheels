@@ -6,7 +6,8 @@ interface IRiderBank {
     accountHolderName: string,
     accountNumber: string,
     ifsc: string,
-    upi?: string
+    upi?: string;
+    contact: string;
     status: "not_added" | "added" | "verified",
     createdAt: Date,
     updatedAt: Date
@@ -26,6 +27,9 @@ const riderBankSchema = new mongoose.Schema<IRiderBank>({
         type: String,
         required: true,
         unique: true
+    },
+    contact: {
+        type: String,
     },
     ifsc: {
         type: String,

@@ -1,8 +1,9 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { motion } from "motion/react";
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ArrowRight, CheckCircle2, Upload } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, CircleDashed, Upload, X } from 'lucide-react';
+import axios from 'axios';
 
 const SceneDocs = () => (
     <svg viewBox="0 0 280 160" fill="none" className="w-full max-w-[200px]">
@@ -17,35 +18,134 @@ const SceneDocs = () => (
 
 const labelCls = 'text-[9px] font-bold uppercase tracking-[0.18em] text-zinc-400 block mb-1.5'
 
-const UploadBox = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => (
+type DocsType = "aadhar" | "license" | "rc"
+
+const ACCEPTED: Record<DocsType, string> = {
+    aadhar: "image/jpeg,image/png,application/pdf",
+    license: "image/jpeg,image/png,application/pdf",
+    rc: "image/jpeg,image/png,application/pdf",
+}
+
+interface UploadBoxProps {
+    label: string
+    doc: DocsType
+    file: File | null
+    inputRef: React.RefObject<HTMLInputElement>
+    onChange: (doc: DocsType, file: File | null) => void
+    onClear: (doc: DocsType) => void
+}
+
+const UploadBox = ({ label, doc, file, inputRef, onChange, onClear }: UploadBoxProps) => (
     <div>
-        <label className={labelCls}>{label}</label>
-        <label className={`flex items-center gap-3 w-full py-3 px-4 rounded-xl border-2 border-dashed cursor-pointer transition-all group ${value ? 'border-zinc-300 bg-zinc-50' : 'border-zinc-200 bg-zinc-50 hover:border-zinc-400 hover:bg-white'}`}>
-            <Upload size={15} className={`shrink-0 transition-colors ${value ? 'text-zinc-500' : 'text-zinc-300 group-hover:text-zinc-500'}`} />
-            <span className={`text-xs transition-colors truncate ${value ? 'text-zinc-600 font-medium' : 'text-zinc-400'}`}>{value || "Click to upload"}</span>
-            {value && <CheckCircle2 size={14} className='text-green-500 ml-auto shrink-0' />}
-            <input type="file" className='hidden' onChange={e => onChange(e.target.files?.[0]?.name || "")} />
-        </label>
+        <p className={labelCls}>{label}</p>
+        <div
+            onClick={() => inputRef.current?.click()}
+            className={`flex items-center gap-3 w-full py-3 px-4 rounded-xl border-2 border-dashed cursor-pointer transition-all group
+                ${file ? 'border-zinc-300 bg-zinc-50' : 'border-zinc-200 bg-zinc-50 hover:border-zinc-400 hover:bg-white'}`}
+        >
+            <Upload size={15} className={`shrink-0 transition-colors ${file ? 'text-zinc-500' : 'text-zinc-300 group-hover:text-zinc-500'}`} />
+            <span className={`text-xs transition-colors truncate flex-1 ${file ? 'text-zinc-700 font-medium' : 'text-zinc-400'}`}>
+                {file ? file.name : "Click to upload"}
+            </span>
+            {file ? (
+                <>
+                    <CheckCircle2 size={14} className='text-green-500 shrink-0' />
+                    <button
+                        type="button"
+                        onClick={e => { e.stopPropagation(); onClear(doc) }}
+                        className='shrink-0 w-5 h-5 rounded-full bg-zinc-200 hover:bg-zinc-300 flex items-center justify-center transition-colors'
+                    >
+                        <X size={10} className='text-zinc-600' />
+                    </button>
+                </>
+            ) : (
+                <span className='text-[10px] text-zinc-300 shrink-0'>
+                    JPG, PNG, PDF
+                </span>
+            )}
+        </div>
+
+        {/* Hidden file input */}
+        <input
+            ref={inputRef}
+            type="file"
+            accept={ACCEPTED[doc]}
+            className='hidden'
+            onChange={e => {
+                const f = e.target.files?.[0] ?? null
+                onChange(doc, f)
+                // reset so the same file can be re-selected after clearing
+                e.target.value = ""
+            }}
+        />
     </div>
 )
 
 export default function DocumentsPage() {
     const router = useRouter()
-    const [aadhaar, setAadhaar] = useState("")
-    const [license, setLicense] = useState("")
-    const [rc, setRc] = useState("")
+    const [loading, setLoading] = useState(false)
+    const [errorMessage, setErrorMessage] = useState("")
 
-    const canContinue = aadhaar && license && rc
+    const [docs, setDocs] = useState<Record<DocsType, File | null>>({
+        aadhar: null,
+        license: null,
+        rc: null,
+    })
+
+    // One ref per upload box
+    const aadharRef = useRef<HTMLInputElement>(null)
+    const licenseRef = useRef<HTMLInputElement>(null)
+    const rcRef = useRef<HTMLInputElement>(null)
+
+    const refs: Record<DocsType, React.RefObject<HTMLInputElement>> = {
+        aadhar: aadharRef,
+        license: licenseRef,
+        rc: rcRef,
+    }
+
+    const handleChange = (doc: DocsType, file: File | null) => {
+        if (!file) return
+        setDocs(prev => ({ ...prev, [doc]: file }))
+        setErrorMessage("")
+    }
+
+    const handleClear = (doc: DocsType) => {
+        setDocs(prev => ({ ...prev, [doc]: null }))
+    }
+
+    const canContinue = docs.aadhar && docs.license && docs.rc
+
+    const handleSubmit = async () => {
+        try {
+            setLoading(true)
+            const formData = new FormData()
+            formData.append("aadhar", docs.aadhar as File)
+            formData.append("license", docs.license as File)
+            formData.append("rc", docs.rc as File)
+            const { data } = await axios.post("/api/rider/onboarding/documents", formData);
+
+            console.log("Submitted documents-----", data);
+            router.push('/rider/onboarding/bank')
+        } catch (error: any) {
+            setErrorMessage(error?.response?.data?.message ?? "Something went wrong. Please try again.")
+        } finally {
+            setLoading(false)
+        }
+    }
 
     return (
         <div className='min-h-screen bg-[#f5f5f3] flex items-center justify-center p-4 pt-20'>
-            <div className='fixed inset-0 pointer-events-none opacity-[0.025]' style={{ backgroundImage: `radial-gradient(circle, #000 1px, transparent 1px)`, backgroundSize: '28px 28px' }} />
+            <div className='fixed inset-0 pointer-events-none opacity-[0.025]'
+                style={{ backgroundImage: `radial-gradient(circle, #000 1px, transparent 1px)`, backgroundSize: '28px 28px' }} />
 
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                className='w-full max-w-3xl bg-white rounded-[24px] shadow-[0_8px_50px_rgba(0,0,0,0.09)] overflow-hidden'>
+            <motion.div
+                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                className='w-full max-w-3xl bg-white rounded-[24px] shadow-[0_8px_50px_rgba(0,0,0,0.09)] overflow-hidden'
+            >
                 <div className='flex'>
 
-                    {/* Left panel */}
+                    {/* ── Left panel ── */}
                     <div className='hidden lg:flex flex-col justify-between w-[260px] shrink-0 bg-gradient-to-br from-stone-900 to-neutral-800 p-6'>
                         <div>
                             <span className='inline-flex items-center gap-1.5 text-[8px] font-black uppercase tracking-[0.2em] text-white/55 border border-white/15 rounded-full px-2.5 py-1'>
@@ -61,10 +161,13 @@ export default function DocumentsPage() {
                         </div>
                     </div>
 
-                    {/* Right panel */}
+                    {/* ── Right panel ── */}
                     <div className='flex-1 flex flex-col p-6 sm:p-7 min-w-0'>
+
+                        {/* Header */}
                         <div className='flex items-center gap-3 mb-5'>
-                            <button onClick={() => router.back()} className='w-8 h-8 shrink-0 rounded-full border border-zinc-200 flex items-center justify-center hover:bg-zinc-900 hover:text-white hover:border-zinc-900 transition-all'>
+                            <button onClick={() => router.back()}
+                                className='w-8 h-8 shrink-0 rounded-full border border-zinc-200 flex items-center justify-center hover:bg-zinc-900 hover:text-white hover:border-zinc-900 transition-all'>
                                 <ArrowLeft size={14} />
                             </button>
                             <div className='flex-1 min-w-0'>
@@ -81,25 +184,68 @@ export default function DocumentsPage() {
                             </div>
                         </div>
 
+                        {/* Upload fields */}
                         <div className='flex-1 space-y-3.5'>
-                            <UploadBox label="Aadhaar / ID Proof" value={aadhaar} onChange={setAadhaar} />
-                            <UploadBox label="Driving license (Front & Back)" value={license} onChange={setLicense} />
-                            <UploadBox label="Vehicle RC Document" value={rc} onChange={setRc} />
+                            <UploadBox
+                                label="Aadhaar / ID Proof"
+                                doc="aadhar"
+                                file={docs.aadhar}
+                                inputRef={aadharRef}
+                                onChange={handleChange}
+                                onClear={handleClear}
+                            />
+                            <UploadBox
+                                label="Driving Licence (Front & Back)"
+                                doc="license"
+                                file={docs.license}
+                                inputRef={licenseRef}
+                                onChange={handleChange}
+                                onClear={handleClear}
+                            />
+                            <UploadBox
+                                label="Vehicle RC Document"
+                                doc="rc"
+                                file={docs.rc}
+                                inputRef={rcRef}
+                                onChange={handleChange}
+                                onClear={handleClear}
+                            />
 
                             <div className='flex items-start gap-2.5 p-3 rounded-xl bg-zinc-50 border border-zinc-100'>
                                 <CheckCircle2 size={13} className='text-zinc-400 mt-0.5 shrink-0' />
-                                <p className='text-[11px] text-zinc-400 leading-relaxed'>Documents reviewed within 24 hrs. You'll get an email once verified.</p>
+                                <p className='text-[11px] text-zinc-400 leading-relaxed'>
+                                    Documents reviewed within 24 hrs. You'll get an email once verified.
+                                </p>
                             </div>
+
+                            {/* Error message */}
+                            {errorMessage && (
+                                <motion.p
+                                    initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
+                                    className='text-xs text-red-500 font-medium text-center'
+                                >
+                                    {errorMessage}
+                                </motion.p>
+                            )}
                         </div>
 
+                        {/* CTA */}
                         <div className='mt-5'>
-                            <motion.button whileHover={canContinue ? { scale: 1.01 } : {}} whileTap={canContinue ? { scale: 0.975 } : {}}
-                                disabled={!canContinue} onClick={() => router.push('/rider/onboarding/bank')}
-                                className='w-full py-3.5 rounded-2xl bg-zinc-900 text-white text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:enabled:bg-black'>
-                                Continue to Bank & Payout <ArrowRight size={14} />
+                            <motion.button
+                                whileHover={canContinue && !loading ? { scale: 1.01 } : {}}
+                                whileTap={canContinue && !loading ? { scale: 0.975 } : {}}
+                                disabled={!canContinue || loading}
+                                onClick={handleSubmit}
+                                className='w-full py-3.5 rounded-2xl bg-zinc-900 text-white text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:enabled:bg-black'
+                            >
+                                {loading
+                                    ? <><CircleDashed size={15} className='animate-spin' /> Uploading...</>
+                                    : <>Continue to Bank & Payout <ArrowRight size={14} /></>
+                                }
                             </motion.button>
                             <p className='text-center text-[10px] text-zinc-300 mt-2.5'>Your data is encrypted and secure</p>
                         </div>
+
                     </div>
                 </div>
             </motion.div>

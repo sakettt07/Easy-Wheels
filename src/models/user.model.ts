@@ -7,7 +7,7 @@ export interface IUser extends Document {
     role: "user" | "rider" | "admin"
     isEmailVerified?: boolean;
     otp?: string;
-    contact?: string
+    contact?: string;
     otpExpiresAt?: Date;
     createdAt: Date;
     updatedAt: Date;
