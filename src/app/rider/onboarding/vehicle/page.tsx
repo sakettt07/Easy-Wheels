@@ -96,7 +96,7 @@ export default function VehiclePage() {
                     {/* Right panel */}
                     <div className='flex-1 flex flex-col p-6 sm:p-7 min-w-0'>
                         <div className='flex items-center gap-3 mb-5'>
-                            <button onClick={() => router.back()} className='w-8 h-8 shrink-0 rounded-full border border-zinc-200 flex items-center justify-center hover:bg-zinc-900 hover:text-white hover:border-zinc-900 transition-all'>
+                            <button onClick={() => router.push('/')} className='w-8 h-8 shrink-0 rounded-full border border-zinc-200 flex items-center justify-center hover:bg-zinc-900 hover:text-white hover:border-zinc-900 transition-all'>
                                 <ArrowLeft size={14} />
                             </button>
                             <div className='flex-1 min-w-0'>
@@ -137,14 +137,14 @@ export default function VehiclePage() {
 
                                 <label className={labelCls}>Vehicle Number</label>
                                 <input className={`${inputCls} uppercase tracking-widest font-semibold`} placeholder='DL 9S AR 3456' value={vehicleNumber} onChange={e => setVehicleNumber(e.target.value.toUpperCase())} />
-                                {errorMessage && (<p className='text-red-500 text-[12px] font-semibold'>*{errorMessage}</p>)}
+
                             </div>
                             <div>
                                 <label className={labelCls}>Vehicle Model</label>
                                 <input className={inputCls} placeholder='e.g. Honda Activa, Tata Sumo' value={vehicleModel} onChange={e => setVehicleModel(e.target.value)} />
                             </div>
                         </div>
-
+                        {errorMessage && (<p className='text-red-500 text-[12px] mt-3 font-semibold'>*{errorMessage}</p>)}
                         <div className='mt-5'>
                             <motion.button whileHover={canContinue ? { scale: 1.01 } : {}} whileTap={canContinue ? { scale: 0.975 } : {}}
                                 disabled={loading} onClick={handleVehicle}
