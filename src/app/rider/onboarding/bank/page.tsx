@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { motion } from "motion/react";
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, CheckCircle2, CircleDashed, CreditCard, IndianRupee, Smartphone } from 'lucide-react';
@@ -131,6 +131,10 @@ export default function BankPage() {
             setLoading(false)
         }
     }
+
+    // useEffect(()=>{
+
+    // },[user])
 
     const canSubmit = form.accountHolder && form.accountNumber && form.ifsc && form.mobile
 
