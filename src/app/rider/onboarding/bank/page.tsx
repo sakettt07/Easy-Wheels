@@ -4,6 +4,8 @@ import { motion } from "motion/react";
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, CheckCircle2, CircleDashed, CreditCard, IndianRupee, Smartphone } from 'lucide-react';
 import axios from 'axios';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/redux/store';
 
 const SceneBank = () => (
     <svg viewBox="0 0 280 160" fill="none" className="w-full max-w-[210px]">
@@ -24,7 +26,6 @@ const SceneBank = () => (
     </svg>
 )
 
-// ── Shared styles (same tokens as vehicle & documents pages) ─
 const inputCls = (hasError?: boolean, extraCls = "") =>
     `w-full bg-zinc-50 border rounded-xl px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-300 focus:outline-none focus:bg-white transition-all ${extraCls} ${hasError
         ? "border-red-300 bg-red-50/50 focus:border-red-400"
@@ -33,7 +34,6 @@ const inputCls = (hasError?: boolean, extraCls = "") =>
 
 const labelCls = 'text-[9px] font-bold uppercase tracking-[0.18em] text-zinc-400 block mb-1.5'
 
-// ── Validation ───────────────────────────────────────────────
 const IFSC_REGEX = /^[A-Z]{4}0[A-Z0-9]{6}$/
 const MOBILE_REGEX = /^[6-9]\d{9}$/
 const UPI_REGEX = /^[\w.-]+@[\w.-]+$/
@@ -67,27 +67,71 @@ const validateField = (key: string, value: string): string => {
 
 type FormKey = "accountHolder" | "accountNumber" | "ifsc" | "mobile" | "upi"
 
+// Always-defined initial state — every key has a string, never undefined
+const INITIAL_FORM: Record<FormKey, string> = {
+    accountHolder: "",
+    accountNumber: "",
+    ifsc: "",
+    mobile: "",
+    upi: "",
+}
+
+const INITIAL_ERRORS: Record<FormKey, string> = {
+    accountHolder: "", accountNumber: "", ifsc: "", mobile: "", upi: "",
+}
+
+const INITIAL_TOUCHED: Record<FormKey, boolean> = {
+    accountHolder: false, accountNumber: false, ifsc: false, mobile: false, upi: false,
+}
+
 export default function BankPage() {
     const router = useRouter()
+    const { userData } = useSelector((state: RootState) => state.user)
 
-    const [form, setForm] = useState<Record<FormKey, string>>({
-        accountHolder: "",
-        accountNumber: "",
-        ifsc: "",
-        mobile: "",
-        upi: "",
-    })
-
-    const [errors, setErrors] = useState<Record<FormKey, string>>({
-        accountHolder: "", accountNumber: "", ifsc: "", mobile: "", upi: "",
-    })
-
-    const [touched, setTouched] = useState<Record<FormKey, boolean>>({
-        accountHolder: false, accountNumber: false, ifsc: false, mobile: false, upi: false,
-    })
-
+    const [form, setForm] = useState<Record<FormKey, string>>(INITIAL_FORM)
+    const [errors, setErrors] = useState<Record<FormKey, string>>(INITIAL_ERRORS)
+    const [touched, setTouched] = useState<Record<FormKey, boolean>>(INITIAL_TOUCHED)
     const [errorMessage, setErrorMessage] = useState("")
+    const [fetchingBank, setFetchingBank] = useState(true)
     const [loading, setLoading] = useState(false)
+
+    // ── GET existing bank details ─────────────────────────────
+    useEffect(() => {
+        const fetchBankDetails = async () => {
+            try {
+                setFetchingBank(true)
+                const { data } = await axios.get("/api/rider/onboarding/bank")
+
+                // ?? "" ensures every field is always a string, never undefined/null
+                // This is what prevents the controlled → uncontrolled warning
+                setForm(prev => ({
+                    ...prev,
+                    accountHolder: data.accountHolderName ?? "",
+                    accountNumber: data.accountNumber ?? "",
+                    ifsc: data.ifsc ?? "",
+                    upi: data.upi ?? "",
+                    // mobile comes from userData, not this API — handled below
+                }))
+            } catch (error: any) {
+                // 404 = no bank details yet, perfectly fine — keep empty form
+                if (error?.response?.status !== 404) {
+                    console.error("Error fetching bank details:", error)
+                }
+            } finally {
+                setFetchingBank(false)
+            }
+        }
+        fetchBankDetails()
+    }, [])
+
+    useEffect(() => {
+        if (userData?.contact) {
+            setForm(prev => ({
+                ...prev,
+                mobile: userData.contact ?? "",
+            }))
+        }
+    }, [userData])
 
     const set = (key: FormKey, val: string) => {
         setForm(f => ({ ...f, [key]: val }))
@@ -101,9 +145,11 @@ export default function BankPage() {
     }
 
     const handleSubmit = async () => {
-        // Touch + validate all fields
-        const allTouched = { accountHolder: true, accountNumber: true, ifsc: true, mobile: true, upi: true }
+        const allTouched: Record<FormKey, boolean> = {
+            accountHolder: true, accountNumber: true, ifsc: true, mobile: true, upi: true,
+        }
         setTouched(allTouched)
+
         const allErrors: Record<FormKey, string> = {
             accountHolder: validateField("accountHolder", form.accountHolder),
             accountNumber: validateField("accountNumber", form.accountNumber),
@@ -124,17 +170,13 @@ export default function BankPage() {
                 contact: form.mobile.trim(),
                 upi: form.upi.trim() || undefined,
             })
-            // router.push('/rider/dashboard')
+            router.push('/')
         } catch (error: any) {
             setErrorMessage(error?.response?.data?.message ?? "Something went wrong. Please try again.")
         } finally {
             setLoading(false)
         }
     }
-
-    // useEffect(()=>{
-
-    // },[user])
 
     const canSubmit = form.accountHolder && form.accountNumber && form.ifsc && form.mobile
 
@@ -183,7 +225,7 @@ export default function BankPage() {
                     {/* ── Right panel ── */}
                     <div className='flex-1 flex flex-col p-6 sm:p-7 min-w-0'>
 
-                        {/* Header — identical structure to other pages */}
+                        {/* Header */}
                         <div className='flex items-center gap-3 mb-5'>
                             <button
                                 onClick={() => router.push('/rider/onboarding/documents')}
@@ -205,103 +247,114 @@ export default function BankPage() {
                             </div>
                         </div>
 
-                        {/* Fields */}
-                        <div className='flex-1 space-y-3.5'>
-
-                            {/* Account Holder */}
-                            <div>
-                                <label className={labelCls}>Account Holder Name</label>
-                                <input
-                                    className={inputCls(touched.accountHolder && !!errors.accountHolder)}
-                                    placeholder='Arjun Sharma'
-                                    value={form.accountHolder}
-                                    onChange={e => set('accountHolder', e.target.value)}
-                                    onBlur={() => handleBlur('accountHolder')}
-                                />
-                                {touched.accountHolder && errors.accountHolder && (
-                                    <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
-                                        className='text-[10px] text-red-500 font-medium mt-1 ml-0.5'>{errors.accountHolder}</motion.p>
-                                )}
+                        {/* Skeleton while loading */}
+                        {fetchingBank ? (
+                            <div className='flex-1 space-y-3.5'>
+                                {[1, 2, 3, 4].map(i => (
+                                    <div key={i}>
+                                        <div className='w-28 h-2 bg-zinc-100 rounded-full mb-2 animate-pulse' />
+                                        <div className='w-full h-10 bg-zinc-100 rounded-xl animate-pulse' />
+                                    </div>
+                                ))}
                             </div>
+                        ) : (
+                            <div className='flex-1 space-y-3.5'>
 
-                            {/* Account Number */}
-                            <div>
-                                <label className={labelCls}>Bank Account Number</label>
-                                <input
-                                    inputMode='numeric'
-                                    className={inputCls(touched.accountNumber && !!errors.accountNumber, "tracking-widest font-semibold")}
-                                    placeholder='XXXX XXXX XXXX XXXX'
-                                    value={form.accountNumber}
-                                    onChange={e => set('accountNumber', e.target.value.replace(/\D/g, '').slice(0, 18))}
-                                    onBlur={() => handleBlur('accountNumber')}
-                                />
-                                {touched.accountNumber && errors.accountNumber && (
-                                    <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
-                                        className='text-[10px] text-red-500 font-medium mt-1 ml-0.5'>{errors.accountNumber}</motion.p>
-                                )}
-                            </div>
-
-                            {/* IFSC */}
-                            <div>
-                                <label className={labelCls}>IFSC Code</label>
-                                <input
-                                    className={inputCls(touched.ifsc && !!errors.ifsc, "uppercase tracking-widest font-semibold")}
-                                    placeholder='SBIN0001234'
-                                    maxLength={11}
-                                    value={form.ifsc}
-                                    onChange={e => set('ifsc', e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 11))}
-                                    onBlur={() => handleBlur('ifsc')}
-                                />
-                                {touched.ifsc && errors.ifsc && (
-                                    <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
-                                        className='text-[10px] text-red-500 font-medium mt-1 ml-0.5'>{errors.ifsc}</motion.p>
-                                )}
-                            </div>
-
-                            {/* Mobile + UPI */}
-                            <div className='grid grid-cols-2 gap-3'>
+                                {/* Account Holder */}
                                 <div>
-                                    <label className={labelCls}>Mobile Number</label>
+                                    <label className={labelCls}>Account Holder Name</label>
+                                    <input
+                                        className={inputCls(touched.accountHolder && !!errors.accountHolder)}
+                                        placeholder='Arjun Sharma'
+                                        value={form.accountHolder}
+                                        onChange={e => set('accountHolder', e.target.value)}
+                                        onBlur={() => handleBlur('accountHolder')}
+                                    />
+                                    {touched.accountHolder && errors.accountHolder && (
+                                        <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+                                            className='text-[10px] text-red-500 font-medium mt-1 ml-0.5'>{errors.accountHolder}</motion.p>
+                                    )}
+                                </div>
+
+                                {/* Account Number */}
+                                <div>
+                                    <label className={labelCls}>Bank Account Number</label>
                                     <input
                                         inputMode='numeric'
-                                        className={inputCls(touched.mobile && !!errors.mobile)}
-                                        placeholder='98765 43210'
-                                        maxLength={10}
-                                        value={form.mobile}
-                                        onChange={e => set('mobile', e.target.value.replace(/\D/g, '').slice(0, 10))}
-                                        onBlur={() => handleBlur('mobile')}
+                                        className={inputCls(touched.accountNumber && !!errors.accountNumber, "tracking-widest font-semibold")}
+                                        placeholder='XXXX XXXX XXXX XXXX'
+                                        value={form.accountNumber}
+                                        onChange={e => set('accountNumber', e.target.value.replace(/\D/g, '').slice(0, 18))}
+                                        onBlur={() => handleBlur('accountNumber')}
                                     />
-                                    {touched.mobile && errors.mobile && (
+                                    {touched.accountNumber && errors.accountNumber && (
                                         <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
-                                            className='text-[10px] text-red-500 font-medium mt-1 ml-0.5'>{errors.mobile}</motion.p>
+                                            className='text-[10px] text-red-500 font-medium mt-1 ml-0.5'>{errors.accountNumber}</motion.p>
                                     )}
                                 </div>
-                                <div>
-                                    <label className={labelCls}>
-                                        UPI ID <span className='normal-case tracking-normal text-zinc-300 ml-1'>(optional)</span>
-                                    </label>
-                                    <input
-                                        className={inputCls(touched.upi && !!errors.upi)}
-                                        placeholder='name@upi'
-                                        value={form.upi}
-                                        onChange={e => set('upi', e.target.value)}
-                                        onBlur={() => handleBlur('upi')}
-                                    />
-                                    {touched.upi && errors.upi && (
-                                        <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
-                                            className='text-[10px] text-red-500 font-medium mt-1 ml-0.5'>{errors.upi}</motion.p>
-                                    )}
-                                </div>
-                            </div>
 
-                            {/* Info note */}
-                            <div className='flex items-start gap-2.5 p-3 rounded-xl bg-zinc-50 border border-zinc-100'>
-                                <CheckCircle2 size={13} className='text-zinc-400 mt-0.5 shrink-0' />
-                                <p className='text-[11px] text-zinc-400 leading-relaxed'>
-                                    Account details are verified before your first payout. Ensure the name matches your Aadhaar.
-                                </p>
+                                {/* IFSC */}
+                                <div>
+                                    <label className={labelCls}>IFSC Code</label>
+                                    <input
+                                        className={inputCls(touched.ifsc && !!errors.ifsc, "uppercase tracking-widest font-semibold")}
+                                        placeholder='SBIN0001234'
+                                        maxLength={11}
+                                        value={form.ifsc}
+                                        onChange={e => set('ifsc', e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 11))}
+                                        onBlur={() => handleBlur('ifsc')}
+                                    />
+                                    {touched.ifsc && errors.ifsc && (
+                                        <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+                                            className='text-[10px] text-red-500 font-medium mt-1 ml-0.5'>{errors.ifsc}</motion.p>
+                                    )}
+                                </div>
+
+                                {/* Mobile + UPI */}
+                                <div className='grid grid-cols-2 gap-3'>
+                                    <div>
+                                        <label className={labelCls}>Mobile Number</label>
+                                        <input
+                                            inputMode='numeric'
+                                            className={inputCls(touched.mobile && !!errors.mobile)}
+                                            placeholder='98765 43210'
+                                            maxLength={10}
+                                            value={form.mobile}
+                                            onChange={e => set('mobile', e.target.value.replace(/\D/g, '').slice(0, 10))}
+                                            onBlur={() => handleBlur('mobile')}
+                                        />
+                                        {touched.mobile && errors.mobile && (
+                                            <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+                                                className='text-[10px] text-red-500 font-medium mt-1 ml-0.5'>{errors.mobile}</motion.p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label className={labelCls}>
+                                            UPI ID <span className='normal-case tracking-normal text-zinc-300 ml-1'>(optional)</span>
+                                        </label>
+                                        <input
+                                            className={inputCls(touched.upi && !!errors.upi)}
+                                            placeholder='name@upi'
+                                            value={form.upi}
+                                            onChange={e => set('upi', e.target.value)}
+                                            onBlur={() => handleBlur('upi')}
+                                        />
+                                        {touched.upi && errors.upi && (
+                                            <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+                                                className='text-[10px] text-red-500 font-medium mt-1 ml-0.5'>{errors.upi}</motion.p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Info note */}
+                                <div className='flex items-start gap-2.5 p-3 rounded-xl bg-zinc-50 border border-zinc-100'>
+                                    <CheckCircle2 size={13} className='text-zinc-400 mt-0.5 shrink-0' />
+                                    <p className='text-[11px] text-zinc-400 leading-relaxed'>
+                                        Account details are verified before your first payout. Ensure the name matches your Aadhaar.
+                                    </p>
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         {/* API error */}
                         {errorMessage && (
@@ -316,7 +369,7 @@ export default function BankPage() {
                             <motion.button
                                 whileHover={canSubmit && !loading ? { scale: 1.01 } : {}}
                                 whileTap={canSubmit && !loading ? { scale: 0.975 } : {}}
-                                disabled={loading}
+                                disabled={loading || fetchingBank}
                                 onClick={handleSubmit}
                                 className='w-full py-3.5 rounded-2xl bg-zinc-900 text-white text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:enabled:bg-black'
                             >
