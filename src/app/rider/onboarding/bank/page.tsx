@@ -158,7 +158,7 @@ export default function BankPage() {
             upi: validateField("upi", form.upi),
         }
         setErrors(allErrors)
-        if (Object.values(allErrors).some(e => e)) return
+        if (Object.values(allErrors).some(e => e)) return;
 
         try {
             setLoading(true)
