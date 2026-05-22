@@ -11,7 +11,8 @@ export interface IUser extends Document {
     otpExpiresAt?: Date;
     createdAt: Date;
     updatedAt: Date;
-    riderOnboardingSteps: number
+    riderOnboardingSteps: number;
+    riderStatus: "pending" | "approved" | "rejected"
 }
 
 const userSchema = new mongoose.Schema<IUser>({
@@ -41,6 +42,11 @@ const userSchema = new mongoose.Schema<IUser>({
         min: 0,
         max: 8,
         default: 0
+    },
+    riderStatus: {
+        type: String,
+        default: "pending",
+        enum: ["pending", "approved", "rejected"]
     },
     contact: {
         type: String
