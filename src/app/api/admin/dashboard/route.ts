@@ -42,7 +42,9 @@ export async function GET(req: NextRequest) {
         }));
 
         return NextResponse.json({
-            totalRiders, totalApprovedRiders, totalPendingRiders, totalRejectedRiders, pendingRiderReviews
+            stats: {
+                totalRiders, totalApprovedRiders, totalPendingRiders, totalRejectedRiders
+            }, pendingRiderReviews
         }, {
             status: 200
         });

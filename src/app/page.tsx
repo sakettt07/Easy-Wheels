@@ -15,11 +15,17 @@ export default async function Home() {
   const user = await User.findOne({ email: session?.user?.email });
   return (
     <div className="w-full min-h-screen bg-white ">
-      <Navbar />
       {user?.role === "rider" ?
-        <RiderDashboard />
+        <>
+          <Navbar />
+
+          <RiderDashboard />
+        </>
         : (user?.role === "admin" ? <AdminDashboard /> :
-          <PublicHome />
+          <>
+            <Navbar />
+            <PublicHome />
+          </>
         )}
       <Footer />
     </div>
