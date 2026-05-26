@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 
-interface IRiderDocs {
+export interface IRiderDocs {
     owner: mongoose.Types.ObjectId,
     aadharUrl: string,
     vehicleRC: string,

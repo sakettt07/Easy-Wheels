@@ -3,7 +3,7 @@ import { unique } from "next/dist/build/utils";
 
 type vehicleType = "bike" | "car" | "loader" | "auto" | "ev" | "traveller"
 
-interface IVehicle {
+export interface IVehicle {
     owner: mongoose.Types.ObjectId
     type: vehicleType,
     vehicleModel: string,
