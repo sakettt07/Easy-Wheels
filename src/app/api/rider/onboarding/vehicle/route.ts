@@ -44,6 +44,17 @@ export async function POST(req: Request) {
             vehicle.vehicleNumber = vehicleNumberUp
             vehicle.vehicleModel = vehicleModel
             vehicle.status = "pending"
+            if (user.riderOnboardingSteps < 2) {
+                user.riderOnboardingSteps = 2
+                user.riderStatus = "pending"
+                await vehicle.save()
+
+            }
+            else {
+                user.riderOnboardingSteps = 3
+                user.riderStatus = "pending"
+                await vehicle.save()
+            }
             await vehicle.save()
             return Response.json(vehicle, { status: 200 })
         }
@@ -60,7 +71,9 @@ export async function POST(req: Request) {
         if (user.riderOnboardingSteps < 1) {
             user.riderOnboardingSteps = 1
         }
+
         user.role = "rider"
+        user.riderStatus = "pending"
         await user.save()
         return Response.json(vehicle, { status: 200 })
 

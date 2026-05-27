@@ -5,9 +5,6 @@ import Vehicle from "@/models/vehicle.model";
 import { Type } from "lucide-react";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req: NextRequest) {
-
-}
 export async function GET(req: NextRequest) {
     try {
         await connectDb();
@@ -25,7 +22,7 @@ export async function GET(req: NextRequest) {
         const pendingRiderUsers = await User.find({
             role: "rider",
             riderStatus: "pending",
-            riderOnboardingSteps: 3
+            riderOnboardingSteps: { $gte: 3 }
         })
         const riderIds = pendingRiderUsers.map((p) => p._id);
         const riderVehicles = await Vehicle.find({

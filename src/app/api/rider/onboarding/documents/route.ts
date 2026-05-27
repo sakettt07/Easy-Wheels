@@ -65,6 +65,11 @@ export async function POST(req: NextRequest) {
         if (user.riderOnboardingSteps < 2) {
             user.riderOnboardingSteps = 2
         }
+        else {
+            user.riderOnboardingSteps = 3
+
+        }
+        user.riderStatus = "pending"
         await user.save();
         return Response.json(riderDocs, { status: 201 })
     } catch (error) {

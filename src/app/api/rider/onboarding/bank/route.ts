@@ -36,9 +36,8 @@ export async function POST(req: NextRequest) {
             { upsert: true, new: true }
         )
         user.contact = contact
-        if (user.riderOnboardingSteps < 3) {
-            user.riderOnboardingSteps = 3
-        }
+        user.riderOnboardingSteps = 3
+        user.riderStatus = "pending"
         await user.save()
         return Response.json(riderBankDetails, { status: 201 })
 
