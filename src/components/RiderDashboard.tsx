@@ -173,7 +173,7 @@ const RiderDashboard = () => {
                         <div className='h-px w-6 bg-zinc-400' />
                         <span className='text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400'>Rider Portal</span>
                     </div>
-                    <h1 className='text-4xl font-black text-zinc-900 tracking-tight'>Partner Onboarding</h1>
+                    <h1 className='text-4xl font-black text-zinc-900 tracking-tight'>Rider Onboarding</h1>
                     <p className='text-zinc-400 text-sm mt-1.5'>Complete all steps to activate your account and start earning.</p>
                 </motion.div>
 

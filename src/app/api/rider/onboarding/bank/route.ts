@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
 
     } catch (error) {
         return Response.json({
-            message: `Partner bank error : ${error}`
+            message: `Rider bank error : ${error}`
         }, { status: 500 })
     }
 }
@@ -74,8 +74,7 @@ export async function GET(req: NextRequest) {
         }
     } catch (error) {
         return Response.json({
-            message: `Partner bank details fetching error : ${error}`
+            message: `Rider bank details fetching error : ${error}`
         }, { status: 500 })
     }
 }
-// 10:11

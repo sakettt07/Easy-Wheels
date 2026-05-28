@@ -9,6 +9,7 @@ interface TabButtonProps {
 }
 
 const TabButton = ({ active, count, icon, onclick, children }: TabButtonProps) => {
+    console.log("this is count--", count)
     return (
         <button
             onClick={onclick}

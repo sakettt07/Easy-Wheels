@@ -31,8 +31,18 @@ const AdminDashboard = () => {
             const { data } = await axios.get('/api/admin/dashboard')
             setStats(data.stats)
             setRiderReviews(Array.isArray(data.pendingRiderReviews) ? data.pendingRiderReviews : [])
-            setKycReviews(Array.isArray(data.pendingKycReviews) ? data.pendingKycReviews : [])
-            setVehicleReviews(Array.isArray(data.pendingVehicleReviews) ? data.pendingVehicleReviews : [])
+        } catch (error) {
+            console.error(error)
+        } finally {
+            setLoading(false)
+        }
+    }
+    const handleGetKYCData = async () => {
+        try {
+            setLoading(true)
+            const { data } = await axios.get('/api/admin/video-kyc/pending')
+            console.log("KYC data---", data);
+            setKycReviews(Array.isArray(data.rider) ? data.rider : [])
         } catch (error) {
             console.error(error)
         } finally {
@@ -42,6 +52,7 @@ const AdminDashboard = () => {
 
     useEffect(() => {
         handleGetData()
+        handleGetKYCData()
     }, [])
 
     return (
