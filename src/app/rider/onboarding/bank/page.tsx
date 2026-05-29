@@ -88,6 +88,10 @@ export default function BankPage() {
     const router = useRouter()
     const { userData } = useSelector((state: RootState) => state.user)
 
+    const handleBack = () => {
+        router.back();
+    }
+
     const [form, setForm] = useState<Record<FormKey, string>>(INITIAL_FORM)
     const [errors, setErrors] = useState<Record<FormKey, string>>(INITIAL_ERRORS)
     const [touched, setTouched] = useState<Record<FormKey, boolean>>(INITIAL_TOUCHED)
@@ -228,7 +232,7 @@ export default function BankPage() {
                         {/* Header */}
                         <div className='flex items-center gap-3 mb-5'>
                             <button
-                                onClick={() => router.push('/rider/onboarding/documents')}
+                                onClick={handleBack}
                                 className='w-8 h-8 shrink-0 rounded-full border border-zinc-200 flex items-center justify-center hover:bg-zinc-900 hover:text-white hover:border-zinc-900 transition-all'
                             >
                                 <ArrowLeft size={14} />

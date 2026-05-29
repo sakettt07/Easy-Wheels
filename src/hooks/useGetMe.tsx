@@ -2,7 +2,7 @@
 
 import { setUserData } from '@/redux/userSlice'
 import axios from 'axios'
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 
 const useGetMe = (enabled: Boolean) => {
@@ -17,14 +17,11 @@ const useGetMe = (enabled: Boolean) => {
                 const { data } = await axios.get("/api/user/me")
                 dispatch(setUserData(data.user))
             } catch (error) {
-                console.log(error);
+                console.error('Error fetching user data:', error);
             }
         }
         getMe();
-    }, [enabled])
-    return (
-        <div>useGetMe</div>
-    )
+    }, [enabled, dispatch])
 }
 
 export default useGetMe

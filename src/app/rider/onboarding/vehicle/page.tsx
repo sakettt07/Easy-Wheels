@@ -112,7 +112,7 @@ export default function VehiclePage() {
                     {/* Right panel */}
                     <div className='flex-1 flex flex-col p-6 sm:p-7 min-w-0'>
                         <div className='flex items-center gap-3 mb-5'>
-                            <button onClick={() => router.push('/')} className='w-8 h-8 shrink-0 rounded-full border border-zinc-200 flex items-center justify-center hover:bg-zinc-900 hover:text-white hover:border-zinc-900 transition-all'>
+                            <button onClick={() => router.back()} className='w-8 h-8 shrink-0 rounded-full border border-zinc-200 flex items-center justify-center hover:bg-zinc-900 hover:text-white hover:border-zinc-900 transition-all'>
                                 <ArrowLeft size={14} />
                             </button>
                             <div className='flex-1 min-w-0'>
