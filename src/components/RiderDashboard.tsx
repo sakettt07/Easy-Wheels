@@ -145,16 +145,16 @@ const RiderStatusBanner = ({
 
 // ── Dashboard ─────────────────────────────────────────────────
 const RiderDashboard = () => {
-    const [completedSteps, setCompletedSteps] = useState(3)
+    const [completedSteps, setCompletedSteps] = useState(3);
     const { userData } = useSelector((state: RootState) => state.user)
-    const router = useRouter()
+    const router = useRouter();
 
     useEffect(() => {
         if (userData) setCompletedSteps(userData.riderOnboardingSteps)
     }, [userData])
 
-    const activeStep = completedSteps + 1
-    const completedCount = completedSteps
+    const activeStep = completedSteps + 1;
+    const completedCount = completedSteps;
     const progressPercent = Math.round((completedSteps / TOTAL_STEPS) * 100)
 
     const riderStatus = userData?.riderStatus
