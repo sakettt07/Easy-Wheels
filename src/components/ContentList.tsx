@@ -25,7 +25,7 @@ export const TYPE_CONFIG = {
     kyc: {
         emptyText: 'No pending KYC reviews',
         emptyIcon: Shield,
-        actionRoute: (id: string) => `/admin/reviews/kyc/${id}`,
+        actionRoute: (id: string) => `/video-kyc/${id}`,
     },
     vehicle: {
         emptyText: 'No pending vehicle reviews',
@@ -56,9 +56,10 @@ const EmptyState = ({ type }: { type: keyof typeof TYPE_CONFIG }) => {
 interface ContentListProps {
     data: any[]
     type: keyof typeof TYPE_CONFIG
+    onRefresh?: () => void
 }
 
-const ContentList = ({ data, type }: ContentListProps) => {
+const ContentList = ({ data, type, onRefresh }: ContentListProps) => {
     const list = Array.isArray(data) ? data : []
 
     if (list.length === 0) return <EmptyState type={type} />
@@ -69,7 +70,7 @@ const ContentList = ({ data, type }: ContentListProps) => {
                 {list.length} pending review{list.length !== 1 ? 's' : ''}
             </p>
             {list.map((item, i) => (
-                <ReviewCard key={item._id ?? i} item={item} type={type} index={i} />
+                <ReviewCard key={item._id ?? i} item={item} type={type} index={i} onRefresh={onRefresh} />
             ))}
         </div>
     )

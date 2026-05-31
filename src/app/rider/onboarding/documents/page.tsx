@@ -4,6 +4,7 @@ import { motion } from "motion/react";
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, CheckCircle2, CircleDashed, Clock, Upload, X } from 'lucide-react';
 import axios from 'axios';
+import useGetMe from '@/hooks/useGetMe';
 
 const SceneDocs = () => (
     <svg viewBox="0 0 280 160" fill="none" className="w-full max-w-[200px]">
@@ -147,6 +148,7 @@ interface ExistingDocs {
 
 export default function DocumentsPage() {
     const router = useRouter()
+    const { refresh: refreshUserData, loading: refreshing } = useGetMe()
     const [loading, setLoading] = useState(false)
     const [fetchingDocs, setFetchingDocs] = useState(true)
     const [errorMessage, setErrorMessage] = useState("")
@@ -230,7 +232,14 @@ export default function DocumentsPage() {
 
             const { data } = await axios.post("/api/rider/onboarding/documents", formData)
             console.log("Submitted documents:", data)
-            router.push('/rider/onboarding/bank')
+            
+            // Refresh user data to reflect the updated onboarding step
+            await refreshUserData()
+            
+            // Small delay to ensure data is updated before redirect
+            setTimeout(() => {
+                router.push('/rider/onboarding/bank')
+            }, 300)
         } catch (error: any) {
             setErrorMessage(error?.response?.data?.message ?? "Something went wrong. Please try again.")
         } finally {

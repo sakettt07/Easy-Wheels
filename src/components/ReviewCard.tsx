@@ -12,10 +12,12 @@ const ReviewCard = ({
     item,
     type,
     index,
+    onRefresh,
 }: {
     item: any
     type: keyof typeof TYPE_CONFIG
     index: number
+    onRefresh?: () => void
 }) => {
     const router = useRouter()
     const cfg = TYPE_CONFIG[type]
@@ -34,8 +36,14 @@ const ReviewCard = ({
             setKycError('')
             const { data } = await axios.get(`/api/admin/video-kyc/start/${item._id}`)
             console.log('KYC started:', data)
-            // Optionally navigate to the KYC call page
-            // router.push(`/admin/reviews/kyc/${item._id}`)
+
+            // Refresh parent dashboard to show updated KYC status
+            // Add small delay to ensure backend is updated
+            setTimeout(() => {
+                if (onRefresh) {
+                    onRefresh()
+                }
+            }, 300)
         } catch (error: any) {
             setKycError(error?.response?.data?.message ?? 'Failed to start KYC')
         } finally {

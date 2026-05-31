@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Bike, Car, CircleDashed, Package, Truck, Zap } from 'lucide-react';
 import axios from 'axios';
+import useGetMe from '@/hooks/useGetMe';
 
 const STEPS = [
     { step: 1, title: "Vehicle Details", subtitle: "Tell us about your vehicle", image: { bg: "from-zinc-900 to-zinc-700", headline: "Join 5,000+ riders earning with Easy Wheels", sub: "Set up in under 3 minutes and start accepting rides today.", stat: { value: "₹40K+", label: "avg. monthly earnings" }, badge: "Rider Program", scene: "vehicle" } },
@@ -43,6 +44,7 @@ const labelCls = 'text-[9px] font-bold uppercase tracking-[0.18em] text-zinc-400
 
 export default function VehiclePage() {
     const router = useRouter()
+    const { refresh: refreshUserData, loading: refreshing } = useGetMe()
     const [vehicleType, setVehicleType] = useState("")
     const [vehicleNumber, setVehicleNumber] = useState("")
     const [vehicleModel, setVehicleModel] = useState("")
@@ -51,6 +53,7 @@ export default function VehiclePage() {
 
     const canContinue = vehicleType && vehicleNumber.trim() && vehicleModel.trim()
     const meta = STEPS[0];
+    
     const handleVehicle = async () => {
         setErrorMessage("");
         try {
@@ -58,12 +61,16 @@ export default function VehiclePage() {
             const { data } = await axios.post("/api/rider/onboarding/vehicle", {
                 type: vehicleType, vehicleNumber, vehicleModel
             })
-            setLoading(false);
-            router.push('/rider/onboarding/documents');
+            
+            // Refresh user data to reflect the updated onboarding step
+            await refreshUserData()
+            
+            // Small delay to ensure data is updated before redirect
+            setTimeout(() => {
+                router.push('/rider/onboarding/documents');
+            }, 300)
         } catch (error: any) {
-            setErrorMessage(error.response.data.message);
-            setLoading(false);
-
+            setErrorMessage(error.response?.data?.message || "Failed to save vehicle details");
         }
         finally {
             setLoading(false);

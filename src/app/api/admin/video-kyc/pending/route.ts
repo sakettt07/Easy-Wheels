@@ -14,6 +14,7 @@ export async function GET(req: NextRequest) {
         }
         const rider = await User.find({
             role: "rider",
+            riderOnboardingSteps: 4,
             videoKYCStatus: { $in: ["pending", "in_progress"] }
         })
         return Response.json({

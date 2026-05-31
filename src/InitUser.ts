@@ -9,9 +9,14 @@ import { clearPersistedState } from './redux/persistedSlice';
 const InitUser = () => {
     const { status } = useSession();
     const dispatch = useDispatch();
+    const { refresh } = useGetMe();
 
     // Fetch user data when authenticated
-    useGetMe(status === "authenticated")
+    useEffect(() => {
+        if (status === "authenticated") {
+            refresh()
+        }
+    }, [status, refresh])
 
     // Clear user data and persisted state when user logs out
     useEffect(() => {

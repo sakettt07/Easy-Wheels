@@ -1,6 +1,6 @@
 'use client'
 import axios from 'axios';
-import { Car, FileText, Shield, Users } from 'lucide-react';
+import { Car, FileText, Shield, Users, RefreshCw } from 'lucide-react';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
@@ -50,6 +50,11 @@ const AdminDashboard = () => {
         }
     }
 
+    const handleRefresh = async () => {
+        await handleGetData()
+        await handleGetKYCData()
+    }
+
     useEffect(() => {
         handleGetData()
         handleGetKYCData()
@@ -80,9 +85,19 @@ const AdminDashboard = () => {
                     initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
                 >
-                    <div className='flex items-center gap-2 mb-1.5'>
-                        <div className='h-px w-6 bg-zinc-400' />
-                        <span className='text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400'>Operations</span>
+                    <div className='flex items-center justify-between gap-2 mb-1.5'>
+                        <div className='flex items-center gap-2'>
+                            <div className='h-px w-6 bg-zinc-400' />
+                            <span className='text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400'>Operations</span>
+                        </div>
+                        <button
+                            onClick={handleRefresh}
+                            disabled={loading}
+                            className='flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-[10px] font-black transition-all disabled:opacity-50'
+                        >
+                            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+                            {loading ? 'Refreshing...' : 'Refresh'}
+                        </button>
                     </div>
                     <h1 className='text-3xl font-black text-zinc-900 tracking-tight'>Admin Dashboard</h1>
                     <p className='text-zinc-400 text-sm mt-1'>Monitor riders, reviews, and onboarding activity.</p>
@@ -141,9 +156,9 @@ const AdminDashboard = () => {
                             exit={{ opacity: 0, y: -8 }}
                             transition={{ duration: 0.22, ease: 'easeOut' }}
                         >
-                            {activeTab === 'rider' && <ContentList data={riderReviews} type='rider' />}
-                            {activeTab === 'kyc' && <ContentList data={kycReviews} type='kyc' />}
-                            {activeTab === 'vehicle' && <ContentList data={vehicleReviews} type='vehicle' />}
+                            {activeTab === 'rider' && <ContentList data={riderReviews} type='rider' onRefresh={handleRefresh} />}
+                            {activeTab === 'kyc' && <ContentList data={kycReviews} type='kyc' onRefresh={handleRefresh} />}
+                            {activeTab === 'vehicle' && <ContentList data={vehicleReviews} type='vehicle' onRefresh={handleRefresh} />}
                         </motion.div>
                     </AnimatePresence>
                 </div>

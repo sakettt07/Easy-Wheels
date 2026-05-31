@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowRight, CheckCircle2, CircleDashed, CreditCard, IndianRu
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
+import useGetMe from '@/hooks/useGetMe';
 
 const SceneBank = () => (
     <svg viewBox="0 0 280 160" fill="none" className="w-full max-w-[210px]">
@@ -86,6 +87,7 @@ const INITIAL_TOUCHED: Record<FormKey, boolean> = {
 
 export default function BankPage() {
     const router = useRouter()
+    const { refresh: refreshUserData, loading: refreshing } = useGetMe()
     const { userData } = useSelector((state: RootState) => state.user)
 
     const handleBack = () => {
@@ -174,7 +176,14 @@ export default function BankPage() {
                 contact: form.mobile.trim(),
                 upi: form.upi.trim() || undefined,
             })
-            router.push('/')
+            
+            // Refresh user data to reflect the completed onboarding
+            await refreshUserData()
+            
+            // Small delay to ensure data is updated before redirect
+            setTimeout(() => {
+                router.push('/')
+            }, 300)
         } catch (error: any) {
             setErrorMessage(error?.response?.data?.message ?? "Something went wrong. Please try again.")
         } finally {
