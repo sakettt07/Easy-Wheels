@@ -11,8 +11,8 @@ export async function proxy(req: NextRequest) {
     if (public_routes.includes(pathname)) {
         return NextResponse.next()
     }
-    if (public_apis.includes(pathname)) {
-        return NextResponse.next()
+    if (pathname.startsWith("/api/auth")) {
+        return NextResponse.next();
     }
     const session = await auth();
     if (!session) {
@@ -34,10 +34,8 @@ export async function proxy(req: NextRequest) {
         }
     }
     if (pathname.startsWith("/api")) {
-        if (!session.user || !session) {
-            return Response.json({
-                message: "unauthorised"
-            }, { status: 401 })
+        if (!session) {
+            return Response.json({ message: "unauthorised" }, { status: 401 });
         }
     }
     return NextResponse.next()

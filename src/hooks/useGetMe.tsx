@@ -2,29 +2,33 @@
 
 import { setUserData } from '@/redux/userSlice'
 import axios from 'axios'
-import React, { useEffect } from 'react'
-import { useDispatch } from 'react-redux'
+import { useCallback, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { RootState } from '@/redux/store'
 
-const useGetMe = (enabled: Boolean) => {
+const useGetMe = () => {
     const dispatch = useDispatch()
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState<string | null>(null)
 
-    useEffect(() => {
-        if (!enabled) {
-            return
+    const refresh = useCallback(async () => {
+        setLoading(true)
+        setError(null)
+        try {
+            const { data } = await axios.get("/api/user/me")
+            dispatch(setUserData(data.user))
+            return data.user
+        } catch (err: any) {
+            const errorMsg = err?.response?.data?.message || 'Error fetching user data'
+            setError(errorMsg)
+            console.error('Error fetching user data:', err)
+            throw err
+        } finally {
+            setLoading(false)
         }
-        const getMe = async () => {
-            try {
-                const { data } = await axios.get("/api/user/me")
-                dispatch(setUserData(data.user))
-            } catch (error) {
-                console.log(error);
-            }
-        }
-        getMe();
-    }, [enabled])
-    return (
-        <div>useGetMe</div>
-    )
+    }, [dispatch])
+
+    return { refresh, loading, error }
 }
 
 export default useGetMe

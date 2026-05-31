@@ -1,9 +1,10 @@
 'use client'
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { motion } from "motion/react";
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ArrowRight, CheckCircle2, CircleDashed, Upload, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, CircleDashed, Clock, Upload, X } from 'lucide-react';
 import axios from 'axios';
+import useGetMe from '@/hooks/useGetMe';
 
 const SceneDocs = () => (
     <svg viewBox="0 0 280 160" fill="none" className="w-full max-w-[200px]">
@@ -26,43 +27,100 @@ const ACCEPTED: Record<DocsType, string> = {
     rc: "image/jpeg,image/png,application/pdf",
 }
 
+// ── Uploaded preview circle ──────────────────────────────────
+const UploadedPreview = ({ url }: { url: string | null }) => {
+    if (!url) {
+        // Blank placeholder circle
+        return (
+            <div className='w-12 h-12 shrink-0 rounded-full border-2 border-dashed border-zinc-200 bg-zinc-50 flex items-center justify-center'>
+                <div className='w-5 h-5 rounded-full bg-zinc-100' />
+            </div>
+        )
+    }
+
+    // Check if it's a PDF (no image to show)
+    const isPdf = url.toLowerCase().includes('.pdf') || url.toLowerCase().includes('application/pdf')
+
+    return (
+        <div className='relative w-12 h-12 shrink-0 group'>
+            {isPdf ? (
+                <div className='w-12 h-12 rounded-full border-2 border-green-300 bg-green-50 flex items-center justify-center'>
+                    <span className='text-[8px] font-black text-green-600 uppercase tracking-tight'>PDF</span>
+                </div>
+            ) : (
+                <img
+                    src={url}
+                    alt="Uploaded document"
+                    className='w-12 h-12 rounded-full object-cover border-2 border-green-300 shadow-sm'
+                />
+            )}
+            {/* Green tick overlay */}
+            <div className='absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-white border border-green-300 flex items-center justify-center'>
+                <CheckCircle2 size={11} className='text-green-500' />
+            </div>
+            {/* Hover: view full */}
+            <a
+                href={url}
+                target='_blank'
+                rel='noopener noreferrer'
+                onClick={e => e.stopPropagation()}
+                className='absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center'
+            >
+                <span className='text-[8px] font-black text-white uppercase tracking-tight'>View</span>
+            </a>
+        </div>
+    )
+}
+
+// ── Upload box ───────────────────────────────────────────────
 interface UploadBoxProps {
     label: string
     doc: DocsType
     file: File | null
+    uploadedUrl: string | null
     inputRef: React.RefObject<HTMLInputElement>
     onChange: (doc: DocsType, file: File | null) => void
     onClear: (doc: DocsType) => void
 }
 
-const UploadBox = ({ label, doc, file, inputRef, onChange, onClear }: UploadBoxProps) => (
+const UploadBox = ({ label, doc, file, uploadedUrl, inputRef, onChange, onClear }: UploadBoxProps) => (
     <div>
         <p className={labelCls}>{label}</p>
-        <div
-            onClick={() => inputRef.current?.click()}
-            className={`flex items-center gap-3 w-full py-3 px-4 rounded-xl border-2 border-dashed cursor-pointer transition-all group
-                ${file ? 'border-zinc-300 bg-zinc-50' : 'border-zinc-200 bg-zinc-50 hover:border-zinc-400 hover:bg-white'}`}
-        >
-            <Upload size={15} className={`shrink-0 transition-colors ${file ? 'text-zinc-500' : 'text-zinc-300 group-hover:text-zinc-500'}`} />
-            <span className={`text-xs transition-colors truncate flex-1 ${file ? 'text-zinc-700 font-medium' : 'text-zinc-400'}`}>
-                {file ? file.name : "Click to upload"}
-            </span>
-            {file ? (
-                <>
-                    <CheckCircle2 size={14} className='text-green-500 shrink-0' />
-                    <button
-                        type="button"
-                        onClick={e => { e.stopPropagation(); onClear(doc) }}
-                        className='shrink-0 w-5 h-5 rounded-full bg-zinc-200 hover:bg-zinc-300 flex items-center justify-center transition-colors'
-                    >
-                        <X size={10} className='text-zinc-600' />
-                    </button>
-                </>
-            ) : (
-                <span className='text-[10px] text-zinc-300 shrink-0'>
-                    JPG, PNG, PDF
+        <div className='flex items-center gap-3'>
+
+            {/* Uploaded preview circle (always visible) */}
+            <UploadedPreview url={uploadedUrl} />
+
+            {/* Input area */}
+            <div
+                onClick={() => inputRef.current?.click()}
+                className={`flex items-center gap-3 flex-1 py-3 px-4 rounded-xl border-2 border-dashed cursor-pointer transition-all group
+                    ${file
+                        ? 'border-zinc-300 bg-zinc-50'
+                        : uploadedUrl
+                            ? 'border-zinc-200 bg-zinc-50 hover:border-zinc-300'
+                            : 'border-zinc-200 bg-zinc-50 hover:border-zinc-400 hover:bg-white'
+                    }`}
+            >
+                <Upload size={14} className={`shrink-0 transition-colors ${file || uploadedUrl ? 'text-zinc-400' : 'text-zinc-300 group-hover:text-zinc-500'}`} />
+                <span className={`text-xs transition-colors truncate flex-1 ${file ? 'text-zinc-700 font-medium' : 'text-zinc-400'}`}>
+                    {file ? file.name : uploadedUrl ? 'Replace document' : 'Click to upload'}
                 </span>
-            )}
+                {file ? (
+                    <>
+                        <CheckCircle2 size={13} className='text-green-500 shrink-0' />
+                        <button
+                            type="button"
+                            onClick={e => { e.stopPropagation(); onClear(doc) }}
+                            className='shrink-0 w-5 h-5 rounded-full bg-zinc-200 hover:bg-zinc-300 flex items-center justify-center transition-colors'
+                        >
+                            <X size={10} className='text-zinc-600' />
+                        </button>
+                    </>
+                ) : (
+                    <span className='text-[10px] text-zinc-300 shrink-0'>JPG, PNG, PDF</span>
+                )}
+            </div>
         </div>
 
         {/* Hidden file input */}
@@ -74,34 +132,38 @@ const UploadBox = ({ label, doc, file, inputRef, onChange, onClear }: UploadBoxP
             onChange={e => {
                 const f = e.target.files?.[0] ?? null
                 onChange(doc, f)
-                // reset so the same file can be re-selected after clearing
                 e.target.value = ""
             }}
         />
     </div>
 )
 
+// ── Page ─────────────────────────────────────────────────────
+interface ExistingDocs {
+    aadharUrl: string | null
+    licenseUrl: string | null
+    vehicleRC: string | null
+    status: string | null
+}
+
 export default function DocumentsPage() {
     const router = useRouter()
+    const { refresh: refreshUserData, loading: refreshing } = useGetMe()
     const [loading, setLoading] = useState(false)
+    const [fetchingDocs, setFetchingDocs] = useState(true)
     const [errorMessage, setErrorMessage] = useState("")
 
     const [docs, setDocs] = useState<Record<DocsType, File | null>>({
-        aadhar: null,
-        license: null,
-        rc: null,
+        aadhar: null, license: null, rc: null,
     })
 
-    // One ref per upload box
+    const [existingDocs, setExistingDocs] = useState<ExistingDocs>({
+        aadharUrl: null, licenseUrl: null, vehicleRC: null, status: null,
+    })
+
     const aadharRef = useRef<HTMLInputElement>(null)
     const licenseRef = useRef<HTMLInputElement>(null)
     const rcRef = useRef<HTMLInputElement>(null)
-
-    const refs: Record<DocsType, React.RefObject<HTMLInputElement>> = {
-        aadhar: aadharRef,
-        license: licenseRef,
-        rc: rcRef,
-    }
 
     const handleChange = (doc: DocsType, file: File | null) => {
         if (!file) return
@@ -113,19 +175,71 @@ export default function DocumentsPage() {
         setDocs(prev => ({ ...prev, [doc]: null }))
     }
 
-    const canContinue = docs.aadhar && docs.license && docs.rc
+    // New file selected OR already uploaded = can continue
+    const canContinue =
+        (docs.aadhar || existingDocs.aadharUrl) &&
+        (docs.license || existingDocs.licenseUrl) &&
+        (docs.rc || existingDocs.vehicleRC)
+
+    // Fetch existing docs on mount
+    useEffect(() => {
+        const handleGetRiderDocs = async () => {
+            try {
+                setFetchingDocs(true)
+                const { data } = await axios.get("/api/rider/onboarding/documents")
+                setExistingDocs({
+                    aadharUrl: data.aadharUrl ?? null,
+                    licenseUrl: data.licenseUrl ?? null,
+                    vehicleRC: data.vehicleRC ?? null,
+                    status: data.status ?? null,
+                })
+            } catch (error: any) {
+                // 404 = no docs yet, that's fine
+                if (error?.response?.status !== 404) {
+                    console.error("Error fetching docs:", error)
+                }
+            } finally {
+                setFetchingDocs(false)
+            }
+        }
+        handleGetRiderDocs()
+    }, [])
 
     const handleSubmit = async () => {
         try {
             setLoading(true)
             const formData = new FormData()
-            formData.append("aadhar", docs.aadhar as File)
-            formData.append("license", docs.license as File)
-            formData.append("rc", docs.rc as File)
-            const { data } = await axios.post("/api/rider/onboarding/documents", formData);
 
-            console.log("Submitted documents-----", data);
-            router.push('/rider/onboarding/bank')
+            // For each slot: send new File if selected,
+            // otherwise pass existing URL so API keeps the already-uploaded file.
+            if (docs.aadhar) {
+                formData.append("aadhar", docs.aadhar)
+            } else if (existingDocs.aadharUrl) {
+                formData.append("aadharUrl", existingDocs.aadharUrl)
+            }
+
+            if (docs.license) {
+                formData.append("license", docs.license)
+            } else if (existingDocs.licenseUrl) {
+                formData.append("licenseUrl", existingDocs.licenseUrl)
+            }
+
+            if (docs.rc) {
+                formData.append("rc", docs.rc)
+            } else if (existingDocs.vehicleRC) {
+                formData.append("vehicleRC", existingDocs.vehicleRC)
+            }
+
+            const { data } = await axios.post("/api/rider/onboarding/documents", formData)
+            console.log("Submitted documents:", data)
+            
+            // Refresh user data to reflect the updated onboarding step
+            await refreshUserData()
+            
+            // Small delay to ensure data is updated before redirect
+            setTimeout(() => {
+                router.push('/rider/onboarding/bank')
+            }, 300)
         } catch (error: any) {
             setErrorMessage(error?.response?.data?.message ?? "Something went wrong. Please try again.")
         } finally {
@@ -166,7 +280,7 @@ export default function DocumentsPage() {
 
                         {/* Header */}
                         <div className='flex items-center gap-3 mb-5'>
-                            <button onClick={() => router.push('/rider/onboarding/vehicle')}
+                            <button onClick={() => router.back()}
                                 className='w-8 h-8 shrink-0 rounded-full border border-zinc-200 flex items-center justify-center hover:bg-zinc-900 hover:text-white hover:border-zinc-900 transition-all'>
                                 <ArrowLeft size={14} />
                             </button>
@@ -184,41 +298,85 @@ export default function DocumentsPage() {
                             </div>
                         </div>
 
+                        {/* Status banner if docs already submitted */}
+                        {existingDocs.status && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
+                                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl mb-4 border text-[11px] font-semibold
+                                    ${existingDocs.status === 'verified'
+                                        ? 'bg-green-50 border-green-200 text-green-700'
+                                        : existingDocs.status === 'rejected'
+                                            ? 'bg-red-50 border-red-200 text-red-700'
+                                            : 'bg-amber-50 border-amber-200 text-amber-700'
+                                    }`}
+                            >
+                                {existingDocs.status === 'verified'
+                                    ? <CheckCircle2 size={13} />
+                                    : <Clock size={13} />
+                                }
+                                {existingDocs.status === 'verified'
+                                    ? 'Documents verified successfully'
+                                    : existingDocs.status === 'rejected'
+                                        ? 'Documents rejected — please re-upload'
+                                        : 'Documents submitted and under review (24 hrs)'
+                                }
+                            </motion.div>
+                        )}
+
                         {/* Upload fields */}
-                        <div className='flex-1 space-y-3.5'>
-                            <UploadBox
-                                label="Aadhaar / ID Proof"
-                                doc="aadhar"
-                                file={docs.aadhar}
-                                inputRef={aadharRef}
-                                onChange={handleChange}
-                                onClear={handleClear}
-                            />
-                            <UploadBox
-                                label="Driving Licence (Front & Back)"
-                                doc="license"
-                                file={docs.license}
-                                inputRef={licenseRef}
-                                onChange={handleChange}
-                                onClear={handleClear}
-                            />
-                            <UploadBox
-                                label="Vehicle RC Document"
-                                doc="rc"
-                                file={docs.rc}
-                                inputRef={rcRef}
-                                onChange={handleChange}
-                                onClear={handleClear}
-                            />
+                        <div className='flex-1 space-y-4'>
+                            {fetchingDocs ? (
+                                // Skeleton loaders
+                                <div className='space-y-4'>
+                                    {[1, 2, 3].map(i => (
+                                        <div key={i}>
+                                            <div className='w-24 h-2.5 bg-zinc-100 rounded-full mb-2 animate-pulse' />
+                                            <div className='flex items-center gap-3'>
+                                                <div className='w-12 h-12 rounded-full bg-zinc-100 animate-pulse shrink-0' />
+                                                <div className='flex-1 h-12 rounded-xl bg-zinc-100 animate-pulse' />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <>
+                                    <UploadBox
+                                        label="Aadhaar / ID Proof"
+                                        doc="aadhar"
+                                        file={docs.aadhar}
+                                        uploadedUrl={existingDocs.aadharUrl}
+                                        inputRef={aadharRef}
+                                        onChange={handleChange}
+                                        onClear={handleClear}
+                                    />
+                                    <UploadBox
+                                        label="Driving Licence (Front & Back)"
+                                        doc="license"
+                                        file={docs.license}
+                                        uploadedUrl={existingDocs.licenseUrl}
+                                        inputRef={licenseRef}
+                                        onChange={handleChange}
+                                        onClear={handleClear}
+                                    />
+                                    <UploadBox
+                                        label="Vehicle RC Document"
+                                        doc="rc"
+                                        file={docs.rc}
+                                        uploadedUrl={existingDocs.vehicleRC}
+                                        inputRef={rcRef}
+                                        onChange={handleChange}
+                                        onClear={handleClear}
+                                    />
+                                </>
+                            )}
 
                             <div className='flex items-start gap-2.5 p-3 rounded-xl bg-zinc-50 border border-zinc-100'>
                                 <CheckCircle2 size={13} className='text-zinc-400 mt-0.5 shrink-0' />
                                 <p className='text-[11px] text-zinc-400 leading-relaxed'>
-                                    Documents reviewed within 24 hrs. You'll get an email once verified.
+                                    Documents reviewed within 24 hrs. Hover over a circle to view the uploaded file.
                                 </p>
                             </div>
 
-                            {/* Error message */}
                             {errorMessage && (
                                 <motion.p
                                     initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
@@ -234,7 +392,7 @@ export default function DocumentsPage() {
                             <motion.button
                                 whileHover={canContinue && !loading ? { scale: 1.01 } : {}}
                                 whileTap={canContinue && !loading ? { scale: 0.975 } : {}}
-                                disabled={!canContinue || loading}
+                                disabled={!canContinue || loading || fetchingDocs}
                                 onClick={handleSubmit}
                                 className='w-full py-3.5 rounded-2xl bg-zinc-900 text-white text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:enabled:bg-black'
                             >

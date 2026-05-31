@@ -36,15 +36,14 @@ export async function POST(req: NextRequest) {
             { upsert: true, new: true }
         )
         user.contact = contact
-        if (user.riderOnboardingSteps < 3) {
-            user.riderOnboardingSteps = 3
-        }
+        user.riderOnboardingSteps = 3
+        user.riderStatus = "pending"
         await user.save()
         return Response.json(riderBankDetails, { status: 201 })
 
     } catch (error) {
         return Response.json({
-            message: `Partner bank error : ${error}`
+            message: `Rider bank error : ${error}`
         }, { status: 500 })
     }
 }
@@ -75,8 +74,7 @@ export async function GET(req: NextRequest) {
         }
     } catch (error) {
         return Response.json({
-            message: `Partner bank details fetching error : ${error}`
+            message: `Rider bank details fetching error : ${error}`
         }, { status: 500 })
     }
 }
-// 10:11

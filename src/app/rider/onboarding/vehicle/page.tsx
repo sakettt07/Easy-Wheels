@@ -1,9 +1,10 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from "motion/react";
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Bike, Car, CircleDashed, Package, Truck, Zap } from 'lucide-react';
 import axios from 'axios';
+import useGetMe from '@/hooks/useGetMe';
 
 const STEPS = [
     { step: 1, title: "Vehicle Details", subtitle: "Tell us about your vehicle", image: { bg: "from-zinc-900 to-zinc-700", headline: "Join 5,000+ riders earning with Easy Wheels", sub: "Set up in under 3 minutes and start accepting rides today.", stat: { value: "₹40K+", label: "avg. monthly earnings" }, badge: "Rider Program", scene: "vehicle" } },
@@ -43,6 +44,7 @@ const labelCls = 'text-[9px] font-bold uppercase tracking-[0.18em] text-zinc-400
 
 export default function VehiclePage() {
     const router = useRouter()
+    const { refresh: refreshUserData, loading: refreshing } = useGetMe()
     const [vehicleType, setVehicleType] = useState("")
     const [vehicleNumber, setVehicleNumber] = useState("")
     const [vehicleModel, setVehicleModel] = useState("")
@@ -51,6 +53,7 @@ export default function VehiclePage() {
 
     const canContinue = vehicleType && vehicleNumber.trim() && vehicleModel.trim()
     const meta = STEPS[0];
+    
     const handleVehicle = async () => {
         setErrorMessage("");
         try {
@@ -58,17 +61,37 @@ export default function VehiclePage() {
             const { data } = await axios.post("/api/rider/onboarding/vehicle", {
                 type: vehicleType, vehicleNumber, vehicleModel
             })
-            setLoading(false);
-            router.push('/rider/onboarding/documents');
+            
+            // Refresh user data to reflect the updated onboarding step
+            await refreshUserData()
+            
+            // Small delay to ensure data is updated before redirect
+            setTimeout(() => {
+                router.push('/rider/onboarding/documents');
+            }, 300)
         } catch (error: any) {
-            setErrorMessage(error.response.data.message);
-            setLoading(false);
-
+            setErrorMessage(error.response?.data?.message || "Failed to save vehicle details");
         }
         finally {
             setLoading(false);
         }
     }
+
+
+    useEffect(() => {
+        const handleGetVehicle = async () => {
+            try {
+                const { data } = await axios.get("/api/rider/onboarding/vehicle")
+                console.log("this is my vehcile data---", data);
+                setVehicleType(data.type)
+                setVehicleNumber(data.vehicleNumber)
+                setVehicleModel(data.vehicleModel)
+            } catch (error: any) {
+                console.log(error);
+            }
+        }
+        handleGetVehicle();
+    }, [])
 
     return (
         <div className='min-h-screen bg-[#f5f5f3] flex items-center justify-center p-4 pt-20'>
@@ -96,7 +119,7 @@ export default function VehiclePage() {
                     {/* Right panel */}
                     <div className='flex-1 flex flex-col p-6 sm:p-7 min-w-0'>
                         <div className='flex items-center gap-3 mb-5'>
-                            <button onClick={() => router.push('/')} className='w-8 h-8 shrink-0 rounded-full border border-zinc-200 flex items-center justify-center hover:bg-zinc-900 hover:text-white hover:border-zinc-900 transition-all'>
+                            <button onClick={() => router.back()} className='w-8 h-8 shrink-0 rounded-full border border-zinc-200 flex items-center justify-center hover:bg-zinc-900 hover:text-white hover:border-zinc-900 transition-all'>
                                 <ArrowLeft size={14} />
                             </button>
                             <div className='flex-1 min-w-0'>

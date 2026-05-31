@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 
-interface IRiderBank {
+export interface IRiderBank {
     owner: mongoose.Types.ObjectId,
     accountHolderName: string,
     accountNumber: string,

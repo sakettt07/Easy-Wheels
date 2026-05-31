@@ -5,6 +5,7 @@ import { CircleDashed, Lock, Mail, User, X } from 'lucide-react';
 import Image from 'next/image';
 import axios from 'axios';
 import { signIn, useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 type propType = {
     open: boolean,
@@ -22,19 +23,19 @@ const AuthModal = ({ open, onClose }: propType) => {
     const [errorMessage, setErrorMessage] = useState("");
     const [otp, setOtp] = useState(["", "", "", "", "", ""])
     const session = useSession();
+    const router = useRouter();
     const handleSignup = async () => {
         try {
             setLoading(true);
             const { data } = await axios.post("/api/auth/register", {
                 name, email, password
             });
+            setErrorMessage("");
             setStep("otp");
             setLoading(false);
         } catch (error: any) {
             console.error(error);
-            setErrorMessage(error.response.data.message);
-        }
-        finally {
+            setErrorMessage(error.response?.data?.message || "Signup failed");
             setLoading(false);
         }
     }
@@ -44,13 +45,12 @@ const AuthModal = ({ open, onClose }: propType) => {
             const { data } = await axios.post("/api/auth/verify-email", {
                 email, otp: otp.join("")
             });
+            setErrorMessage("");
             setStep("login");
             setLoading(false);
         } catch (error: any) {
             console.error(error);
-            setErrorMessage(error.response.data.message);
-        }
-        finally {
+            setErrorMessage(error.response?.data?.message || "Verification failed");
             setLoading(false);
         }
     }
@@ -60,12 +60,21 @@ const AuthModal = ({ open, onClose }: propType) => {
             const res = await signIn("credentials", {
                 email, password, redirect: false
             })
+            if (res?.ok) {
+                // Refresh server components and navigate to home
+                router.refresh();
+                router.push('/');
+                onClose();
+                // Reset form
+                setEmail("");
+                setPassword("");
+            } else {
+                setErrorMessage(res?.error || "Login failed");
+            }
             setLoading(false);
-            console.log(res)
         } catch (error) {
             console.log(error);
-        }
-        finally {
+            setErrorMessage("An error occurred. Please try again.");
             setLoading(false);
         }
     }
@@ -171,9 +180,8 @@ const AuthModal = ({ open, onClose }: propType) => {
                                                     <Lock size={18} className='text-gray-500' />
                                                     <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder='Password' className='w-full bg-transparent outline-none text-sm' />
                                                 </div>
-                                                {/* {errorMessage && (<p className='text-red-500'>{errorMessage}</p>)} */}
+                                                {errorMessage && (<p className='text-red-500 text-sm font-medium'>{errorMessage}</p>)}
                                                 <button disabled={loading} onClick={handleLogin} className='w-full h-11 rounded-xl bg-black text-white font-semibold hover:bg-gray-900 transition flex items-center justify-center'>{!loading ? "Login" : <CircleDashed size={18} className='animate-spin' color='white' />}</button>
-
                                             </div>
                                             <p className='mt-6 text-center text-sm text-gray-500'>Don't have an account? <div onClick={() => setStep("signup")} className='text-black font-medium hover:underline'>Sign Up</div></p>
 
