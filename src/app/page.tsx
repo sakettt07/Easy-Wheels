@@ -7,7 +7,6 @@ import RiderDashboard from "@/components/RiderDashboard";
 import VehicleSlider from "@/components/VehicleSlider";
 import connectDb from "@/lib/db";
 import User from "@/models/user.model";
-import Image from "next/image";
 
 export default async function Home() {
   const session = await auth();

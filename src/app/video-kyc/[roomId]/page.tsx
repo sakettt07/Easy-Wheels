@@ -3,6 +3,7 @@ import React, { useRef } from 'react'
 import { ZegoUIKitPrebuilt } from '@zegocloud/zego-uikit-prebuilt';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
+import Image from 'next/image';
 
 const page = () => {
     const { userData } = useSelector((state: RootState) => state.user)
@@ -31,8 +32,13 @@ const page = () => {
         }
     }
     return (
-        <div ref={containerRef} className='h-screen'>
-            <button onClick={startCall}>Click</button>
+        <div ref={containerRef} className='min-h-screen bg-black text-white flex flex-col'>
+            <div className='px-6 py-4 border-b border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
+                <div>
+                    <Image src="/navLogos.png" alt="Easy Wheels" width={80} height={64} priority />
+                    <p>{userData?.role === "admin" ? "Admin Verification" : "Partner Video KYC"}</p>
+                </div>
+            </div>
         </div>
     )
 }
