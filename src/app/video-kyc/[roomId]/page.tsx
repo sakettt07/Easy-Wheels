@@ -1,12 +1,14 @@
 'use client'
-import React, { useRef } from 'react'
+import React, { useRef, useState } from 'react'
 import { ZegoUIKitPrebuilt } from '@zegocloud/zego-uikit-prebuilt';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import Image from 'next/image';
+import { div } from 'motion/react-client';
 
 const page = () => {
-    const { userData } = useSelector((state: RootState) => state.user)
+    const { userData } = useSelector((state: RootState) => state.user);
+    const [joined, setJoined] = useState(false);
 
     const containerRef = useRef<HTMLDivElement>(null);
     const startCall = async () => {
@@ -38,6 +40,17 @@ const page = () => {
                     <Image src="/navLogos.png" alt="Easy Wheels" width={80} height={64} priority />
                     <p>{userData?.role === "admin" ? "Admin Verification" : "Partner Video KYC"}</p>
                 </div>
+            </div>
+            <div className='flex-1 relative'>
+                {!joined && (
+                    <div>
+                        <div>
+                            <div>
+
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     )
