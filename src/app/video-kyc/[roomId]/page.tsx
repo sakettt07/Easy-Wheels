@@ -43,9 +43,9 @@ const page = () => {
             </div>
             <div className='flex-1 relative'>
                 {!joined && (
-                    <div>
-                        <div>
-                            <div>
+                    <div className="h-full flex items-center justify-center px-4 py-10">
+                        <div className='w-ful max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-12 items-center'>
+                            <div className='relative rounded-2xl overflow-hidden border border-white/10 bg-white/5'>
 
                             </div>
                         </div>
