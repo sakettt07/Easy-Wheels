@@ -14,14 +14,14 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
             return Response.json({
                 message: "unauthorized"
             }, { status: 401 })
-        }
+        };
         const riderId = (await context.params).id
         const rider = await User.findById(riderId);
         if (!rider || rider.role !== "rider") {
             return Response.json({
                 message: "rider not found"
             }, { status: 400 })
-        }
+        };
         rider.riderStatus = "rejected"
         rider.rejectionReason = rejectionReason
         await rider.save();
