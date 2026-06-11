@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import Image from 'next/image';
 import { div, track } from 'motion/react-client';
+import { VideoOff } from 'lucide-react';
 
 const page = () => {
     const { userData } = useSelector((state: RootState) => state.user);
@@ -80,10 +81,13 @@ const page = () => {
                             <div className='relative rounded-2xl overflow-hidden border border-white/10 bg-white/5'>
                                 <video ref={previewRef} autoPlay muted playsInline />
                                 {!isCameraOn && (
-                                    <div>
-                                        <VideoOff />
+                                    <div className='absolute inset-0 bg-black flex items-center justify-center'>
+                                        <VideoOff size={40} />
                                     </div>
                                 )}
+                            </div>
+                            <div className='space-y-8 text-center '>
+
                             </div>
                         </div>
                     </div>
