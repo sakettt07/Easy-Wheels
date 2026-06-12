@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import Image from 'next/image';
 import { div, track } from 'motion/react-client';
-import { VideoOff } from 'lucide-react';
+import { Video, VideoOff } from 'lucide-react';
 
 const page = () => {
     const { userData } = useSelector((state: RootState) => state.user);
@@ -86,8 +86,11 @@ const page = () => {
                                     </div>
                                 )}
                             </div>
-                            <div className='space-y-8 text-center '>
-
+                            <div className='space-y-8 text-center lg:text-left '>
+                                <h1 className='text-3xl sm:text-4xl font-bold'>Secure Video KYC</h1>
+                            </div>
+                            <div className='flex justify-center lg:justify-start gap-6'>
+                                <button className={`w-14 h-14 rounded-full flex items-center justify-center transition ${isCameraOn ? "bg-white text-black" : "bg-white/10 border border-white/20"}`}>{isCameraOn}?<Video />:<VideoOff /></button>
                             </div>
                         </div>
                     </div>
