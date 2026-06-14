@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'motion/react';
 import { useRouter } from 'next/navigation';
+import axios from 'axios'
 import {
     Bike, FileText, CreditCard, ClipboardCheck,
     Video, Tag, Star, Zap, ChevronRight, CheckCircle2,
@@ -106,7 +107,7 @@ const RiderStatusBanner = ({ riderStatus, rejectionReason }: { riderStatus?: str
 }
 
 // ── Video KYC dropdown panel ──────────────────────────────────
-const VideoKYCPanel = ({ roomId, status }: { roomId?: string | null; status?: string | null }) => {
+const VideoKYCPanel = ({ roomId, status, kycRejectionReason }: { roomId?: string | null; status?: string | null; kycRejectionReason?: string | null }) => {
     const [copied, setCopied] = useState(false)
 
     const handleCopy = () => {
@@ -119,10 +120,27 @@ const VideoKYCPanel = ({ roomId, status }: { roomId?: string | null; status?: st
     const handleJoin = () => {
         if (!roomId) return
         // Open the video call — adjust the URL to your video call provider
-        window.open(`/video-kyc/${roomId}`, '_blank')
+        window.open(`/rider/video-kyc/${roomId}`, '_blank')
     }
 
     // ── Status-specific content ───────────────────────────────
+    const [requesting, setRequesting] = useState(false)
+    const [requestDone, setRequestDone] = useState(false)
+    const [requestError, setRequestError] = useState('')
+
+    const handleRequestAgain = async () => {
+        try {
+            setRequesting(true)
+            setRequestError('')
+            await axios.get('/api/rider/video-kyc/request')
+            setRequestDone(true)
+        } catch (err: any) {
+            setRequestError(err?.response?.data?.message ?? 'Request failed. Please try again.')
+        } finally {
+            setRequesting(false)
+        }
+    }
+
     const statusMap: Record<string, { icon: React.ElementType; iconCls: string; bg: string; border: string; title: string; desc: string }> = {
         in_progress: {
             icon: Wifi, iconCls: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200',
@@ -132,19 +150,24 @@ const VideoKYCPanel = ({ roomId, status }: { roomId?: string | null; status?: st
         completed: {
             icon: CheckCircle2, iconCls: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200',
             title: 'Video KYC Completed',
-            desc: 'Your identity has been verified. We\'ll notify you once the review is finalised.',
+            desc: "Your identity has been verified. We'll notify you once the review is finalised.",
+        },
+        approved: {
+            icon: CheckCircle2, iconCls: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200',
+            title: 'Video KYC Approved',
+            desc: "Your identity has been successfully verified. You're all set to move to the next step.",
         },
         rejected: {
             icon: WifiOff, iconCls: 'text-red-500', bg: 'bg-red-50', border: 'border-red-200',
             title: 'Video KYC Rejected',
-            desc: 'Your KYC call was not successful. Please wait for the admin to schedule a new call.',
+            desc: 'Your KYC session was unsuccessful. Review the reason below and request a new call.',
         },
     }
 
     const cfg = statusMap[status ?? ''] ?? {
         icon: Clock, iconCls: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200',
         title: 'Awaiting KYC Scheduling',
-        desc: 'Our team will schedule your Video KYC call shortly. You\'ll see a "Join Call" button here once ready.',
+        desc: "Our team will schedule your Video KYC call shortly. You'll see a Join Call button here once ready.",
     }
 
     const Icon = cfg.icon
@@ -169,6 +192,47 @@ const VideoKYCPanel = ({ roomId, status }: { roomId?: string | null; status?: st
                         <p className='text-[11px] text-zinc-500 mt-0.5 leading-relaxed'>{cfg.desc}</p>
                     </div>
                 </div>
+
+                {/* Rejection reason + re-request (only when rejected) */}
+                {status === 'rejected' && (
+                    <div className='px-4 pb-4 space-y-3'>
+                        {/* Reason block */}
+                        {kycRejectionReason && (
+                            <div className='flex items-start gap-2.5 bg-white/70 border border-red-100 rounded-xl px-3 py-3'>
+                                <AlertTriangle size={13} className='text-red-400 mt-0.5 shrink-0' />
+                                <div>
+                                    <p className='text-[9px] font-black uppercase tracking-[0.15em] text-red-400 mb-1'>Reason from Admin</p>
+                                    <p className='text-xs text-zinc-700 leading-relaxed'>"{kycRejectionReason}"</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Request again */}
+                        {requestDone ? (
+                            <div className='flex items-center gap-2 px-3 py-3 rounded-xl bg-emerald-50 border border-emerald-200'>
+                                <CheckCircle2 size={13} className='text-emerald-600 shrink-0' />
+                                <p className='text-xs font-semibold text-emerald-700'>Request sent! Our team will schedule a new call shortly.</p>
+                            </div>
+                        ) : (
+                            <>
+                                <motion.button
+                                    whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.97 }}
+                                    onClick={handleRequestAgain}
+                                    disabled={requesting}
+                                    className='w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-zinc-900 hover:bg-black text-white text-xs font-black transition-all disabled:opacity-50'
+                                >
+                                    {requesting
+                                        ? <><RefreshCw size={12} className='animate-spin' /> Sending Request…</>
+                                        : <><RefreshCw size={12} /> Request KYC Again</>
+                                    }
+                                </motion.button>
+                                {requestError && (
+                                    <p className='text-[10px] text-red-500 font-semibold text-center'>{requestError}</p>
+                                )}
+                            </>
+                        )}
+                    </div>
+                )}
 
                 {/* Room ID row + actions (only if call is ready) */}
                 {roomId && status === 'in_progress' && (
@@ -237,6 +301,7 @@ const RiderDashboard = () => {
     const rejectionReason = userData?.rejectionReason
     const videoKYCStatus = userData?.videoKYCStatus
     const videoKYCRoomId = userData?.videoKYCRoomId
+    const videoKYCRejectionReason = userData?.VideoKYCRejectionReason
 
     return (
         <div className='min-h-screen bg-[#f5f5f3] px-4 pt-28 pb-20'>
@@ -447,7 +512,7 @@ const RiderDashboard = () => {
                                 {isKYCStep && (
                                     <AnimatePresence>
                                         {expandedKYC && (
-                                            <VideoKYCPanel roomId={videoKYCRoomId} status={videoKYCStatus} />
+                                            <VideoKYCPanel roomId={videoKYCRoomId} status={videoKYCStatus} kycRejectionReason={videoKYCRejectionReason} />
                                         )}
                                     </AnimatePresence>
                                 )}

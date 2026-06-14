@@ -34,7 +34,7 @@ export async function GET(
             );
         }
 
-        const roomId = `kyc-${rider._id}-${Date.now()}`;
+        const roomId = `${rider._id}`;
 
         rider.videoKYCRoomId = roomId;
         rider.videoKYCStatus = "in_progress";

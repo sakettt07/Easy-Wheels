@@ -2,7 +2,6 @@ import { auth } from "@/auth";
 import connectDb from "@/lib/db";
 import User from "@/models/user.model";
 import Vehicle from "@/models/vehicle.model";
-import { number } from "motion";
 import { NextRequest } from "next/server";
 
 const vehicle_regex = /^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{4}$/;
