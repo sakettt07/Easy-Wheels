@@ -322,7 +322,7 @@ const page = () => {
             await axios.post('/api/admin/video-kyc/complete', { roomId, action: 'approved' })
             setApproveOpen(false)
             showToast('KYC approved successfully', 'success')
-            setTimeout(() => router.push('/admin/dashboard'), 2000)
+            setTimeout(() => router.push('/'), 2000)
         } catch (err: any) {
             setActionError(err?.response?.data?.message ?? 'Approval failed. Please try again.')
         } finally {
