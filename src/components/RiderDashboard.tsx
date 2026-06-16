@@ -11,6 +11,7 @@ import {
     Clock, Lock, XCircle, AlertTriangle, RefreshCw,
     ExternalLink, Copy, Check, Wifi, WifiOff
 } from 'lucide-react';
+import PricingModal from './Pricingmodal';
 
 type Step = {
     id: number;
@@ -19,6 +20,7 @@ type Step = {
     icon: React.ElementType;
     route?: string;
     isVideoKYC?: boolean;
+    isPricing?: boolean;
 };
 
 const steps: Step[] = [
@@ -27,7 +29,7 @@ const steps: Step[] = [
     { id: 3, title: "Bank", subtitle: "Set up payout account", icon: CreditCard, route: "/rider/onboarding/bank" },
     { id: 4, title: "Review", subtitle: "Initial profile review", icon: ClipboardCheck },
     { id: 5, title: "Video KYC", subtitle: "Quick identity verification", icon: Video, isVideoKYC: true },
-    { id: 6, title: "Pricing", subtitle: "Choose your service plan", icon: Tag },
+    { id: 6, title: "Pricing", subtitle: "Set your fare & upload photo", icon: Tag, isPricing: true },
     { id: 7, title: "Final Review", subtitle: "Last check before going live", icon: Star },
     { id: 8, title: "Live", subtitle: "Start accepting rides!", icon: Zap },
 ]
@@ -63,7 +65,6 @@ const RiderStatusBanner = ({ riderStatus, rejectionReason }: { riderStatus?: str
             <span className='text-[9px] font-black uppercase tracking-[0.15em] px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 border border-amber-200 shrink-0'>Pending</span>
         </motion.div>
     )
-
     if (riderStatus === 'approved') return (
         <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
             className='flex items-start gap-3.5 p-4 rounded-2xl bg-emerald-50 border border-emerald-200'>
@@ -75,7 +76,6 @@ const RiderStatusBanner = ({ riderStatus, rejectionReason }: { riderStatus?: str
             <span className='text-[9px] font-black uppercase tracking-[0.15em] px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 shrink-0'>Approved</span>
         </motion.div>
     )
-
     if (riderStatus === 'rejected') return (
         <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
             className='rounded-2xl border border-red-200 overflow-hidden'>
@@ -102,13 +102,15 @@ const RiderStatusBanner = ({ riderStatus, rejectionReason }: { riderStatus?: str
             </div>
         </motion.div>
     )
-
     return null
 }
 
 // ── Video KYC dropdown panel ──────────────────────────────────
 const VideoKYCPanel = ({ roomId, status, kycRejectionReason }: { roomId?: string | null; status?: string | null; kycRejectionReason?: string | null }) => {
     const [copied, setCopied] = useState(false)
+    const [requesting, setRequesting] = useState(false)
+    const [requestDone, setRequestDone] = useState(false)
+    const [requestError, setRequestError] = useState('')
 
     const handleCopy = () => {
         if (!roomId) return
@@ -119,14 +121,8 @@ const VideoKYCPanel = ({ roomId, status, kycRejectionReason }: { roomId?: string
 
     const handleJoin = () => {
         if (!roomId) return
-        // Open the video call — adjust the URL to your video call provider
         window.open(`/rider/video-kyc/${roomId}`, '_blank')
     }
-
-    // ── Status-specific content ───────────────────────────────
-    const [requesting, setRequesting] = useState(false)
-    const [requestDone, setRequestDone] = useState(false)
-    const [requestError, setRequestError] = useState('')
 
     const handleRequestAgain = async () => {
         try {
@@ -181,10 +177,8 @@ const VideoKYCPanel = ({ roomId, status, kycRejectionReason }: { roomId?: string
             className='overflow-hidden'
         >
             <div className={`mx-4 mb-4 rounded-xl border ${cfg.border} ${cfg.bg} overflow-hidden`}>
-
-                {/* Header */}
                 <div className='flex items-start gap-3 p-4'>
-                    <div className={`w-8 h-8 rounded-lg bg-white/60 flex items-center justify-center shrink-0`}>
+                    <div className='w-8 h-8 rounded-lg bg-white/60 flex items-center justify-center shrink-0'>
                         <Icon size={15} className={cfg.iconCls} />
                     </div>
                     <div className='flex-1 min-w-0'>
@@ -193,10 +187,9 @@ const VideoKYCPanel = ({ roomId, status, kycRejectionReason }: { roomId?: string
                     </div>
                 </div>
 
-                {/* Rejection reason + re-request (only when rejected) */}
+                {/* Rejected: reason + re-request */}
                 {status === 'rejected' && (
                     <div className='px-4 pb-4 space-y-3'>
-                        {/* Reason block */}
                         {kycRejectionReason && (
                             <div className='flex items-start gap-2.5 bg-white/70 border border-red-100 rounded-xl px-3 py-3'>
                                 <AlertTriangle size={13} className='text-red-400 mt-0.5 shrink-0' />
@@ -206,8 +199,6 @@ const VideoKYCPanel = ({ roomId, status, kycRejectionReason }: { roomId?: string
                                 </div>
                             </div>
                         )}
-
-                        {/* Request again */}
                         {requestDone ? (
                             <div className='flex items-center gap-2 px-3 py-3 rounded-xl bg-emerald-50 border border-emerald-200'>
                                 <CheckCircle2 size={13} className='text-emerald-600 shrink-0' />
@@ -226,43 +217,28 @@ const VideoKYCPanel = ({ roomId, status, kycRejectionReason }: { roomId?: string
                                         : <><RefreshCw size={12} /> Request KYC Again</>
                                     }
                                 </motion.button>
-                                {requestError && (
-                                    <p className='text-[10px] text-red-500 font-semibold text-center'>{requestError}</p>
-                                )}
+                                {requestError && <p className='text-[10px] text-red-500 font-semibold text-center'>{requestError}</p>}
                             </>
                         )}
                     </div>
                 )}
 
-                {/* Room ID row + actions (only if call is ready) */}
+                {/* In-progress: room ID + join */}
                 {roomId && status === 'in_progress' && (
                     <div className='px-4 pb-4 space-y-3'>
-                        {/* Room ID display */}
                         <div className='flex items-center gap-2 bg-white/70 border border-white/80 rounded-xl px-3 py-2.5'>
                             <div className='flex-1 min-w-0'>
                                 <p className='text-[9px] font-bold uppercase tracking-[0.15em] text-zinc-400 mb-0.5'>Room ID</p>
                                 <p className='text-xs font-semibold text-zinc-700 truncate font-mono'>{roomId}</p>
                             </div>
-                            <button
-                                onClick={handleCopy}
-                                className='shrink-0 w-7 h-7 rounded-lg bg-zinc-100 hover:bg-zinc-200 flex items-center justify-center transition-all'
-                                title='Copy room ID'
-                            >
+                            <button onClick={handleCopy} className='shrink-0 w-7 h-7 rounded-lg bg-zinc-100 hover:bg-zinc-200 flex items-center justify-center transition-all' title='Copy room ID'>
                                 {copied ? <Check size={12} className='text-emerald-600' /> : <Copy size={12} className='text-zinc-500' />}
                             </button>
                         </div>
-
-                        {/* Join button */}
-                        <motion.button
-                            whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.97 }}
-                            onClick={handleJoin}
-                            className='w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-zinc-900 hover:bg-black text-white text-xs font-black transition-all'
-                        >
-                            <Video size={13} /> Join Video Call
-                            <ExternalLink size={11} className='opacity-60' />
+                        <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.97 }} onClick={handleJoin}
+                            className='w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-zinc-900 hover:bg-black text-white text-xs font-black transition-all'>
+                            <Video size={13} /> Join Video Call <ExternalLink size={11} className='opacity-60' />
                         </motion.button>
-
-                        {/* Tips */}
                         <div className='grid grid-cols-3 gap-2'>
                             {['Good lighting', 'Quiet space', 'Documents ready'].map(tip => (
                                 <div key={tip} className='flex items-center gap-1.5 bg-white/50 rounded-lg px-2 py-1.5'>
@@ -284,11 +260,11 @@ const RiderDashboard = () => {
     const { userData } = useSelector((state: RootState) => state.user)
     const router = useRouter()
     const [expandedKYC, setExpandedKYC] = useState(false)
+    const [pricingOpen, setPricingOpen] = useState(false)
 
     useEffect(() => {
         if (userData) {
             setCompletedSteps(userData.riderOnboardingSteps)
-            // Auto-expand Video KYC panel if call is in progress
             if (userData.videoKYCStatus === 'in_progress') setExpandedKYC(true)
         }
     }, [userData])
@@ -326,11 +302,8 @@ const RiderDashboard = () => {
                 </AnimatePresence>
 
                 {/* Summary card */}
-                <motion.div
-                    initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.45, delay: 0.07, ease: [0.22, 1, 0.36, 1] }}
-                    className='bg-zinc-900 rounded-[20px] p-6 text-white flex flex-col sm:flex-row items-start sm:items-center gap-6'
-                >
+                <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, delay: 0.07, ease: [0.22, 1, 0.36, 1] }}
+                    className='bg-zinc-900 rounded-[20px] p-6 text-white flex flex-col sm:flex-row items-start sm:items-center gap-6'>
                     <div className='flex items-center gap-6 flex-1'>
                         <div>
                             <p className='text-4xl font-black leading-none'>{completedCount}<span className='text-zinc-500 text-xl'>/{TOTAL_STEPS}</span></p>
@@ -366,11 +339,8 @@ const RiderDashboard = () => {
                 </motion.div>
 
                 {/* Horizontal track */}
-                <motion.div
-                    initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.45, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
-                    className='bg-white rounded-[20px] p-6 shadow-[0_2px_20px_rgba(0,0,0,0.06)] overflow-x-auto'
-                >
+                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+                    className='bg-white rounded-[20px] p-6 shadow-[0_2px_20px_rgba(0,0,0,0.06)] overflow-x-auto'>
                     <div className='relative min-w-[640px]'>
                         <div className='absolute top-5 left-5 right-5 h-[2px] bg-zinc-100' />
                         <motion.div className='absolute top-5 left-5 h-[2px] bg-zinc-900 origin-left'
@@ -385,9 +355,9 @@ const RiderDashboard = () => {
                                 return (
                                     <motion.div key={step.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: i * 0.06 + 0.3, duration: 0.35 }}
-                                        className='flex flex-col items-center gap-2'
-                                    >
-                                        <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${cfg.ring} z-10 relative ${step.isVideoKYC && videoKYCStatus === 'in_progress' ? 'ring-2 ring-blue-400 ring-offset-2' : ''}`}>
+                                        className='flex flex-col items-center gap-2'>
+                                        <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${cfg.ring} z-10 relative
+                                            ${step.isVideoKYC && videoKYCStatus === 'in_progress' ? 'ring-2 ring-blue-400 ring-offset-2' : ''}`}>
                                             {status === 'completed' ? <CheckCircle2 size={16} className='text-white' />
                                                 : status === 'locked' ? <Lock size={13} className={cfg.icon} />
                                                     : <Icon size={15} className={cfg.icon} />}
@@ -408,10 +378,16 @@ const RiderDashboard = () => {
                         const status = getStatus(step.id, activeStep)
                         const cfg = statusConfig[status]
                         const Icon = step.icon
-                        const isClickable = (status === 'active' || status === 'pending' || status === 'completed') && !step.isVideoKYC
-                        const isKYCStep = step.isVideoKYC
-                        // KYC step is interactable if it has a status
+
+                        const isKYCStep = !!step.isVideoKYC
+                        const isPricingStep = !!step.isPricing
                         const kycInteractable = isKYCStep && !!videoKYCStatus
+                        const pricingInteractable = isPricingStep && (status === 'active' || status === 'completed')
+                        const isClickable = (status === 'active' || status === 'pending' || status === 'completed')
+                            && !isKYCStep && !isPricingStep
+
+                        const isActive = status === 'active'
+                            || (isKYCStep && videoKYCStatus === 'in_progress')
 
                         return (
                             <motion.div
@@ -420,20 +396,20 @@ const RiderDashboard = () => {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: i * 0.05 + 0.2, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                                 className={`bg-white rounded-2xl border transition-all duration-200 overflow-hidden
-                                    ${status === 'active' || (isKYCStep && videoKYCStatus === 'in_progress')
+                                    ${isActive
                                         ? 'border-zinc-900 shadow-[0_4px_24px_rgba(0,0,0,0.1)]'
-                                        : 'border-zinc-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)]'}
-                                `}
+                                        : 'border-zinc-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)]'}`}
                             >
                                 {/* Card row */}
                                 <div
-                                    className={`flex items-center gap-4 p-4 ${isClickable || kycInteractable ? 'cursor-pointer hover:bg-zinc-50/50' : 'cursor-default'} transition-colors`}
+                                    className={`flex items-center gap-4 p-4 transition-colors
+                                        ${isClickable || kycInteractable || pricingInteractable
+                                            ? 'cursor-pointer hover:bg-zinc-50/50'
+                                            : 'cursor-default'}`}
                                     onClick={() => {
-                                        if (isKYCStep && kycInteractable) {
-                                            setExpandedKYC(p => !p)
-                                        } else if (isClickable && step.route) {
-                                            router.push(step.route)
-                                        }
+                                        if (isKYCStep && kycInteractable) setExpandedKYC(p => !p)
+                                        else if (isPricingStep && pricingInteractable) setPricingOpen(true)
+                                        else if (isClickable && step.route) router.push(step.route)
                                     }}
                                 >
                                     {/* Icon */}
@@ -452,7 +428,6 @@ const RiderDashboard = () => {
                                             <span className={`text-[9px] font-black uppercase tracking-[0.15em] px-2 py-0.5 rounded-full border ${cfg.label}`}>
                                                 {cfg.labelText}
                                             </span>
-                                            {/* Live indicator for in-progress KYC */}
                                             {isKYCStep && videoKYCStatus === 'in_progress' && (
                                                 <span className='inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-[0.12em] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200'>
                                                     <span className='w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse' />
@@ -469,18 +444,23 @@ const RiderDashboard = () => {
 
                                     <span className='text-[10px] font-bold text-zinc-300 shrink-0 mr-1'>{step.id}/{TOTAL_STEPS}</span>
 
-                                    {/* Chevron for KYC toggle */}
+                                    {/* KYC toggle chevron */}
                                     {isKYCStep && kycInteractable && (
-                                        <motion.div
-                                            animate={{ rotate: expandedKYC ? 90 : 0 }}
-                                            transition={{ duration: 0.2 }}
-                                            className='w-7 h-7 rounded-full bg-zinc-100 flex items-center justify-center shrink-0'
-                                        >
+                                        <motion.div animate={{ rotate: expandedKYC ? 90 : 0 }} transition={{ duration: 0.2 }}
+                                            className='w-7 h-7 rounded-full bg-zinc-100 flex items-center justify-center shrink-0'>
                                             <ChevronRight size={13} className='text-zinc-500' />
                                         </motion.div>
                                     )}
 
-                                    {/* Arrow for regular steps */}
+                                    {/* Pricing arrow */}
+                                    {isPricingStep && pricingInteractable && (
+                                        <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all
+                                            ${status === 'active' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-400'}`}>
+                                            <ChevronRight size={13} />
+                                        </div>
+                                    )}
+
+                                    {/* Regular step arrow */}
                                     {isClickable && step.route && (
                                         <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all
                                             ${status === 'active' ? 'bg-zinc-900 text-white' : 'bg-zinc-100 text-zinc-400'}`}>
@@ -496,8 +476,8 @@ const RiderDashboard = () => {
                                     )}
                                 </div>
 
-                                {/* Active step progress bar */}
-                                {status === 'active' && !isKYCStep && (
+                                {/* Active progress bar (non-KYC, non-pricing) */}
+                                {status === 'active' && !isKYCStep && !isPricingStep && (
                                     <div className='px-4 pb-4'>
                                         <div className='h-1 w-full bg-zinc-100 rounded-full overflow-hidden'>
                                             <motion.div className='h-full bg-zinc-900 rounded-full'
@@ -508,11 +488,15 @@ const RiderDashboard = () => {
                                     </div>
                                 )}
 
-                                {/* Video KYC expandable panel */}
+                                {/* Video KYC expandable */}
                                 {isKYCStep && (
                                     <AnimatePresence>
                                         {expandedKYC && (
-                                            <VideoKYCPanel roomId={videoKYCRoomId} status={videoKYCStatus} kycRejectionReason={videoKYCRejectionReason} />
+                                            <VideoKYCPanel
+                                                roomId={videoKYCRoomId}
+                                                status={videoKYCStatus}
+                                                kycRejectionReason={videoKYCRejectionReason}
+                                            />
                                         )}
                                     </AnimatePresence>
                                 )}
@@ -520,8 +504,15 @@ const RiderDashboard = () => {
                         )
                     })}
                 </div>
-
             </div>
+
+            {/* Pricing modal */}
+            <PricingModal
+                open={pricingOpen}
+                onClose={() => setPricingOpen(false)}
+                data={null}
+                onSuccess={() => setPricingOpen(false)}
+            />
         </div>
     )
 }
