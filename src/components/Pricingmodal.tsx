@@ -43,8 +43,6 @@ const PricingModal = ({ open, onClose, data, onSuccess }: PropsType) => {
             formData.append("baseFare", baseFare.trim())
             formData.append("pricePerKM", pricePerKM.trim())
             formData.append("waitingCharge", waitingCharge.trim())
-            if (data?._id) formData.append("vehicleId", data._id.toString())
-
             await axios.post("/api/rider/onboarding/pricing", formData)
             onSuccess?.()
             onClose()
