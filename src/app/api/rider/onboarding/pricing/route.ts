@@ -70,3 +70,41 @@ export async function POST(req: NextRequest) {
         return Response.json({ message: `Nothing to update ${error}` }, { status: 500 })
     }
 }
+
+export async function GET() {
+    try {
+        await connectDb();
+        const session = await auth();
+        if (!session || !session.user?.email) {
+            return Response.json(
+                {
+                    message: "unauthorized"
+                },
+                { status: 401 }
+            );
+        }
+        const rider = await User.findOne({ emaik: session.user.email })
+        if (!rider) {
+            return Response.json(
+                {
+                    message: "Rider not found"
+                },
+                { status: 400 }
+            );
+        }
+        const vehicle = await Vehicle.findOne({ owner: rider._id })
+        if (!rider) {
+            return Response.json({
+                message: "vehicle not found"
+            }, { status: 400 })
+        }
+        return Response.json(vehicle, { status: 200 })
+    } catch (error) {
+        return Response.json(
+            {
+                message: `Pricing get error ${error}`
+            },
+            { status: 500 }
+        );
+    }
+}
