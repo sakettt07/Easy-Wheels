@@ -52,6 +52,13 @@ const PricingModal = ({ open, onClose, data, onSuccess }: PropsType) => {
             setLoading(false)
         }
     }
+    const handleGetPricing = async () => {
+        try {
+            const { data } = await axios.get();
+        } catch (error) {
+
+        }
+    }
 
     return (
         <AnimatePresence>
