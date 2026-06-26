@@ -9,6 +9,7 @@ export async function POST(req: NextRequest) {
     try {
         await connectDb();
         const session = await auth();
+        console.log("session----", session);
         if (!session || !session.user?.email) {
             return Response.json(
                 {
@@ -17,7 +18,9 @@ export async function POST(req: NextRequest) {
                 { status: 401 }
             );
         }
-        const rider = await User.findOne({ emaik: session.user.email })
+        const rider = await User.findOne({ email: session.user.email })
+        console.log("rider----", rider);
+
         if (!rider) {
             return Response.json(
                 {
@@ -33,7 +36,7 @@ export async function POST(req: NextRequest) {
             }, { status: 400 })
         }
         const formData = await req.formData()
-        const image = formData.get("image") as File | null
+        const image = formData.get("vehicleImage") as File | null
         const baseFare = formData.get("baseFare")
         const waitingCharge = formData.get("waitingCharge")
         const pricePerKM = formData.get("pricePerKM")
@@ -62,9 +65,9 @@ export async function POST(req: NextRequest) {
         vehicle.status = "pending"
         vehicle.rejectionReason = undefined
         await vehicle.save()
-        rider.riderOnBoardingSteps = 6
+        rider.riderOnboardingSteps = 6
         await rider.save()
-        return Response.json({ message: "Pricing Submitted" }, { status: 400 })
+        return Response.json({ message: "Pricing Submitted" }, { status: 200 })
     } catch (error) {
         console.log(error)
         return Response.json({ message: `Nothing to update ${error}` }, { status: 500 })
@@ -83,7 +86,7 @@ export async function GET() {
                 { status: 401 }
             );
         }
-        const rider = await User.findOne({ emaik: session.user.email })
+        const rider = await User.findOne({ email: session.user.email })
         if (!rider) {
             return Response.json(
                 {

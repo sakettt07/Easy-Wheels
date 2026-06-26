@@ -2,7 +2,6 @@ import { auth } from "@/auth";
 import connectDb from "@/lib/db";
 import User from "@/models/user.model";
 import Vehicle from "@/models/vehicle.model";
-import { Type } from "lucide-react";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
@@ -37,8 +36,12 @@ export async function GET(req: NextRequest) {
             email: p.email,
             vehicleType: vehicleTypeMap.get(String(p._id))
         }));
+        const pendingVehicles = await Vehicle.find({
+            status: "pending"
+        }).populate("owner")
 
         return NextResponse.json({
+            pendingVehicles,
             stats: {
                 totalRiders, totalApprovedRiders, totalPendingRiders, totalRejectedRiders
             }, pendingRiderReviews

@@ -30,7 +30,7 @@ export const TYPE_CONFIG = {
     vehicle: {
         emptyText: 'No pending vehicle reviews',
         emptyIcon: Car,
-        actionRoute: (id: string) => `/admin/reviews/vehicle/${id}`,
+        actionRoute: (id: string) => `/admin/reviews/rider/${id}`,
     },
 }
 

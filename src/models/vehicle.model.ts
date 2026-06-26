@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import { unique } from "next/dist/build/utils";
 
 type vehicleType = "bike" | "car" | "loader" | "auto" | "ev" | "traveller"
 
