@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import axios from 'axios'
 import {
     Bike, FileText, CreditCard, ClipboardCheck,
-    Video, Tag, Star, Zap, ChevronRight, CheckCircle2,
+    Video, Tag, Star, Zap, BookOpen, ChevronRight, CheckCircle2,
     Clock, Lock, XCircle, AlertTriangle, RefreshCw,
     ExternalLink, Copy, Check, Wifi, WifiOff
 } from 'lucide-react';
@@ -31,7 +31,7 @@ const steps: Step[] = [
     { id: 5, title: "Video KYC", subtitle: "Quick identity verification", icon: Video, isVideoKYC: true },
     { id: 6, title: "Pricing", subtitle: "Set your fare & upload photo", icon: Tag, isPricing: true },
     { id: 7, title: "Final Review", subtitle: "Last check before going live", icon: Star },
-    { id: 8, title: "Live", subtitle: "Start accepting rides!", icon: Zap },
+    { id: 8, title: "Live", subtitle: "Start accepting rides!", icon: Zap, route: "/bookings" },
 ]
 
 const TOTAL_STEPS = steps.length
@@ -121,7 +121,7 @@ const VideoKYCPanel = ({ roomId, status, kycRejectionReason }: { roomId?: string
 
     const handleJoin = () => {
         if (!roomId) return
-        window.open(`/rider/video-kyc/${roomId}`, '_blank')
+        window.open(`/video-kyc/${roomId}`, '_blank')
     }
 
     const handleRequestAgain = async () => {
@@ -261,6 +261,23 @@ const RiderDashboard = () => {
     const router = useRouter()
     const [expandedKYC, setExpandedKYC] = useState(false)
     const [pricingOpen, setPricingOpen] = useState(false)
+    const [pricingStatus, setPricingStatus] = useState<'pending' | 'approved' | 'rejected' | null>(null)
+    const [pricingRejectionReason, setPricingRejectionReason] = useState<string | null>(null)
+
+    const refreshPricingState = async () => {
+        try {
+            const { data: vehicle } = await axios.get('/api/rider/onboarding/pricing')
+            setPricingStatus(vehicle?.status ?? null)
+            setPricingRejectionReason(vehicle?.rejectionReason ?? null)
+        } catch (error: any) {
+            if (error?.response?.status === 404) {
+                setPricingStatus(null)
+                setPricingRejectionReason(null)
+                return
+            }
+            console.error('Error fetching pricing state:', error)
+        }
+    }
 
     useEffect(() => {
         if (userData) {
@@ -268,6 +285,10 @@ const RiderDashboard = () => {
             if (userData.videoKYCStatus === 'in_progress') setExpandedKYC(true)
         }
     }, [userData])
+
+    useEffect(() => {
+        void refreshPricingState()
+    }, [])
 
     const activeStep = completedSteps + 1
     const completedCount = completedSteps
@@ -278,6 +299,15 @@ const RiderDashboard = () => {
     const videoKYCStatus = userData?.videoKYCStatus
     const videoKYCRoomId = userData?.videoKYCRoomId
     const videoKYCRejectionReason = userData?.VideoKYCRejectionReason
+    const pricingBadge = pricingStatus === 'rejected'
+        ? { label: 'Rejected', cls: 'bg-red-50 text-red-600 border-red-200' }
+        : pricingStatus === 'pending'
+            ? { label: 'Under Review', cls: 'bg-amber-50 text-amber-700 border-amber-200' }
+            : pricingStatus === 'approved'
+                ? { label: 'Approved', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' }
+                : null
+
+    const isLive = riderStatus === 'approved' && pricingStatus === 'approved' && completedSteps >= 7
 
     return (
         <div className='min-h-screen bg-[#f5f5f3] px-4 pt-28 pb-20'>
@@ -287,7 +317,7 @@ const RiderDashboard = () => {
             <div className='max-w-4xl mx-auto space-y-6 relative'>
 
                 {/* Page header */}
-                <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}>
+                <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}>
                     <div className='flex items-center gap-2 mb-2'>
                         <div className='h-px w-6 bg-zinc-400' />
                         <span className='text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400'>Rider Portal</span>
@@ -302,7 +332,7 @@ const RiderDashboard = () => {
                 </AnimatePresence>
 
                 {/* Summary card */}
-                <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, delay: 0.07, ease: [0.22, 1, 0.36, 1] }}
+                <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.28, delay: 0.04, ease: [0.22, 1, 0.36, 1] }}
                     className='bg-zinc-900 rounded-[20px] p-6 text-white flex flex-col sm:flex-row items-start sm:items-center gap-6'>
                     <div className='flex items-center gap-6 flex-1'>
                         <div>
@@ -338,12 +368,35 @@ const RiderDashboard = () => {
                     </div>
                 </motion.div>
 
+                {/* Live booking card */}
+                {isLive && (
+                    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.28, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
+                        className='bg-emerald-50 border border-emerald-200 rounded-3xl p-5 shadow-[0_8px_32px_rgba(16,185,129,0.12)] overflow-hidden'>
+                        <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4'>
+                            <div className='flex items-start gap-4'>
+                                <div className='w-12 h-12 rounded-3xl bg-white/80 text-emerald-700 flex items-center justify-center shadow-sm'>
+                                    <Zap size={22} />
+                                </div>
+                                <div>
+                                    <p className='text-sm font-black text-emerald-900'>You are live</p>
+                                    <p className='text-xs text-emerald-700 mt-1'>Your vehicle is ready to accept bookings. Customers can now book your ride immediately.</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => router.push('/bookings')}
+                                className='inline-flex items-center gap-2 rounded-2xl bg-emerald-900 px-4 py-3 text-sm font-black text-white transition hover:bg-emerald-800'>
+                                <BookOpen size={16} /> Go to bookings
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+
                 {/* Horizontal track */}
-                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.28, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
                     className='bg-white rounded-[20px] p-6 shadow-[0_2px_20px_rgba(0,0,0,0.06)] overflow-x-auto'>
-                    <div className='relative min-w-[640px]'>
-                        <div className='absolute top-5 left-5 right-5 h-[2px] bg-zinc-100' />
-                        <motion.div className='absolute top-5 left-5 h-[2px] bg-zinc-900 origin-left'
+                    <div className='relative min-w-160'>
+                        <div className='absolute top-5 left-5 right-5 h-0.5 bg-zinc-100' />
+                        <motion.div className='absolute top-5 left-5 h-0.5 bg-zinc-900 origin-left'
                             style={{ right: `${(1 - completedSteps / (TOTAL_STEPS - 1)) * 100}%` }}
                             initial={{ scaleX: 0 }} animate={{ scaleX: 1 }}
                             transition={{ duration: 1, delay: 0.5, ease: [0.22, 1, 0.36, 1] }} />
@@ -395,7 +448,7 @@ const RiderDashboard = () => {
                                 initial={{ opacity: 0, y: 16 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: i * 0.05 + 0.2, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                                className={`bg-white rounded-2xl border transition-all duration-200 overflow-hidden
+                                className={`bg-white rounded-2xl border transition-[box-shadow,border-color,transform] duration-200 will-change-transform overflow-hidden
                                     ${isActive
                                         ? 'border-zinc-900 shadow-[0_4px_24px_rgba(0,0,0,0.1)]'
                                         : 'border-zinc-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)]'}`}
@@ -425,13 +478,20 @@ const RiderDashboard = () => {
                                             <span className={`text-sm font-black ${status === 'locked' ? 'text-zinc-300' : 'text-zinc-900'}`}>
                                                 {step.title}
                                             </span>
-                                            <span className={`text-[9px] font-black uppercase tracking-[0.15em] px-2 py-0.5 rounded-full border ${cfg.label}`}>
-                                                {cfg.labelText}
+                                            <span className={`text-[9px] font-black uppercase tracking-[0.15em] px-2 py-0.5 rounded-full border ${step.id === 8 && status !== 'locked'
+                                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                                : cfg.label}`}>
+                                                {step.id === 8 && status !== 'locked' ? 'Live' : cfg.labelText}
                                             </span>
                                             {isKYCStep && videoKYCStatus === 'in_progress' && (
                                                 <span className='inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-[0.12em] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200'>
                                                     <span className='w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse' />
                                                     Live
+                                                </span>
+                                            )}
+                                            {isPricingStep && pricingBadge && (
+                                                <span className={`text-[9px] font-black uppercase tracking-[0.12em] px-2 py-0.5 rounded-full border ${pricingBadge.cls}`}>
+                                                    {pricingBadge.label}
                                                 </span>
                                             )}
                                         </div>
@@ -476,6 +536,40 @@ const RiderDashboard = () => {
                                     )}
                                 </div>
 
+                                {isPricingStep && (pricingStatus || pricingRejectionReason) && (
+                                    <div className={`mx-4 mb-4 rounded-xl border px-3 py-3 ${pricingStatus === 'rejected'
+                                        ? 'bg-red-50 border-red-200'
+                                        : pricingStatus === 'pending'
+                                            ? 'bg-amber-50 border-amber-200'
+                                            : 'bg-emerald-50 border-emerald-200'}`}>
+                                        <div className='flex items-start gap-2'>
+                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${pricingStatus === 'rejected'
+                                                ? 'bg-red-100 text-red-600'
+                                                : pricingStatus === 'pending'
+                                                    ? 'bg-amber-100 text-amber-600'
+                                                    : 'bg-emerald-100 text-emerald-600'}`}>
+                                                {pricingStatus === 'rejected' ? <AlertTriangle size={14} /> : pricingStatus === 'pending' ? <Clock size={14} /> : <CheckCircle2 size={14} />}
+                                            </div>
+                                            <div className='flex-1 min-w-0'>
+                                                <p className={`text-[10px] font-black uppercase tracking-[0.14em] ${pricingStatus === 'rejected' ? 'text-red-500' : pricingStatus === 'pending' ? 'text-amber-700' : 'text-emerald-700'}`}>
+                                                    {pricingStatus === 'rejected'
+                                                        ? 'Needs attention'
+                                                        : pricingStatus === 'pending'
+                                                            ? 'Awaiting admin review'
+                                                            : 'Pricing approved'}
+                                                </p>
+                                                <p className='text-xs text-zinc-600 leading-relaxed mt-0.5'>
+                                                    {pricingStatus === 'rejected'
+                                                        ? (pricingRejectionReason ? `Reason: ${pricingRejectionReason}` : 'Please resubmit your pricing details with the requested corrections.')
+                                                        : pricingStatus === 'pending'
+                                                            ? 'Your latest pricing submission is under review and will be updated once an admin responds.'
+                                                            : 'Your pricing is approved and you can continue with the next step.'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* Active progress bar (non-KYC, non-pricing) */}
                                 {status === 'active' && !isKYCStep && !isPricingStep && (
                                     <div className='px-4 pb-4'>
@@ -511,7 +605,12 @@ const RiderDashboard = () => {
                 open={pricingOpen}
                 onClose={() => setPricingOpen(false)}
                 data={null}
-                onSuccess={() => setPricingOpen(false)}
+                onSuccess={async () => {
+                    setPricingStatus('pending')
+                    setPricingRejectionReason(null)
+                    setPricingOpen(false)
+                    await refreshPricingState()
+                }}
             />
         </div>
     )

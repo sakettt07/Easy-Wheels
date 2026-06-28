@@ -14,7 +14,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
             }, { status: 401 })
         }
         const vehicleId = (await context.params).id
-        const vehicle = await Vehicle.findById(vehicleId).populate("owner");
+        const vehicle = await Vehicle.findById(vehicleId);
 
         if (!vehicle) {
             return Response.json({
@@ -23,13 +23,27 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
                 { status: 400 }
             );
         }
+        vehicle.status = "approved"
+        vehicle.rejectionReason = undefined
+        await vehicle.save();
+
+        const rider = await User.findById(vehicle.owner)
+        if (!rider) {
+            return Response.json({
+                message: "Rider not found"
+            },
+                { status: 400 }
+            );
+        }
+        rider.riderOnboardingSteps = 7
+        await rider.save();
         return Response.json(
             vehicle, { status: 200 }
         )
 
     } catch (error) {
         return Response.json({
-            message: `Admin vehicle review get error ${error}`
+            message: `Admin vehicle approved get error ${error}`
         },
             { status: 500 }
         );

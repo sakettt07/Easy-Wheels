@@ -4,7 +4,7 @@ import User from "@/models/user.model";
 import Vehicle from "@/models/vehicle.model";
 import { NextRequest } from "next/server";
 
-export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+export async function POST(req: NextRequest, context: { params: Promise<{ id: string }> }) {
     try {
         await connectDb();
         const session = await auth();
@@ -13,8 +13,9 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
                 message: "unauthorized"
             }, { status: 401 })
         }
+        const { reason } = await req.json();
         const vehicleId = (await context.params).id
-        const vehicle = await Vehicle.findById(vehicleId).populate("owner");
+        const vehicle = await Vehicle.findById(vehicleId);
 
         if (!vehicle) {
             return Response.json({
@@ -23,13 +24,16 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
                 { status: 400 }
             );
         }
+        vehicle.status = "rejected"
+        vehicle.rejectionReason = reason
+        await vehicle.save();
         return Response.json(
             vehicle, { status: 200 }
         )
 
     } catch (error) {
         return Response.json({
-            message: `Admin vehicle review get error ${error}`
+            message: `Admin vehicle rejected get error ${error}`
         },
             { status: 500 }
         );

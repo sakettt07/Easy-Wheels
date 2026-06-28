@@ -17,6 +17,8 @@ export async function GET(req: NextRequest) {
         const totalApprovedRiders = await User.countDocuments({ role: "rider", riderStatus: "approved" });
         const totalRejectedRiders = await User.countDocuments({ role: "rider", riderStatus: "rejected" });
         const totalPendingRiders = await User.countDocuments({ role: "rider", riderStatus: "pending" });
+        const rejectedPricingCount = await Vehicle.countDocuments({ status: "rejected" });
+        const rejectedCount = totalRejectedRiders + rejectedPricingCount;
 
         const pendingRiderUsers = await User.find({
             role: "rider",
@@ -37,13 +39,14 @@ export async function GET(req: NextRequest) {
             vehicleType: vehicleTypeMap.get(String(p._id))
         }));
         const pendingVehicles = await Vehicle.find({
-            status: "pending"
+            status: "pending",
+            baseFare: { $exists: true }
         }).populate("owner")
 
         return NextResponse.json({
             pendingVehicles,
             stats: {
-                totalRiders, totalApprovedRiders, totalPendingRiders, totalRejectedRiders
+                totalRiders, totalApprovedRiders, totalPendingRiders, totalRejectedRiders: rejectedCount
             }, pendingRiderReviews
         }, {
             status: 200

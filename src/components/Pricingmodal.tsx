@@ -12,7 +12,7 @@ type PropsType = {
     open: boolean
     onClose: () => void
     data: IVehicle | null
-    onSuccess?: () => void
+    onSuccess?: () => void | Promise<void>
 }
 
 const inputCls = 'w-full outline-none text-sm text-zinc-900 placeholder:text-zinc-300 bg-transparent'
@@ -115,19 +115,19 @@ const PricingModal = ({ open, onClose, data, onSuccess }: PropsType) => {
                 <>
                     {/* Backdrop */}
                     <motion.div
-                        className='fixed inset-0 z-[1000] bg-black/55 backdrop-blur-sm'
+                        className='fixed inset-0 z-1000 bg-black/55 backdrop-blur-sm'
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                         onClick={handleClose}
                     />
 
                     {/* Modal */}
-                    <div className='fixed inset-0 z-[1001] flex items-center justify-center p-4 pointer-events-none'>
+                    <div className='fixed inset-0 z-1001 flex items-center justify-center p-4 pointer-events-none'>
                         <motion.div
                             initial={{ scale: 0.88, opacity: 0, y: 16 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.88, opacity: 0, y: 16 }}
                             transition={{ type: 'spring', damping: 26, stiffness: 300 }}
-                            className='bg-white rounded-[24px] shadow-2xl w-full max-w-lg overflow-hidden pointer-events-auto'
+                            className='bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden pointer-events-auto'
                         >
                             {/* Header */}
                             <div className='flex items-center justify-between px-6 py-5 border-b border-zinc-100'>
