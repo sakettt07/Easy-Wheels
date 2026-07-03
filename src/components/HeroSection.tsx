@@ -14,11 +14,6 @@ const HeroSection = ({ onAuthRequired }: propType) => {
     const router = useRouter();
     const { userData } = useSelector((state: RootState) => state.user)
 
-
-    useEffect(() => {
-        const socket = getSocket();
-        socket.emit("identity", { userId: userData?._id })
-    }, [])
     return (
         <div className='relative min-h-screen w-full overflow-hidden'>
             <div className='absolute inset-0 bg-cover bg-center' style={{

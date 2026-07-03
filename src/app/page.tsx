@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import AdminDashboard from "@/components/AdminDashboard";
 import Footer from "@/components/Footer";
+import GeoUpdater from "@/components/GeoUpdater";
 import Navbar from "@/components/Navbar";
 import PublicHome from "@/components/PublicHome";
 import RiderDashboard from "@/components/RiderDashboard";
@@ -14,6 +15,7 @@ export default async function Home() {
   const user = await User.findOne({ email: session?.user?.email });
   return (
     <div className="w-full min-h-screen bg-white ">
+      <GeoUpdater userId={user._id} />
       {user?.role === "rider" ?
         <>
           <Navbar />
