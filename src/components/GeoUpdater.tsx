@@ -25,6 +25,9 @@ const GeoUpdater = ({ userId }: { userId: string }) => {
             enableHighAccuracy: true,
             maximumAge: 5000
         })
+        return () => {
+            navigator.geolocation.clearWatch(watcher);
+        }
     }, [userId])
     return null;
 }

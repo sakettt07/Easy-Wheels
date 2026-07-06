@@ -1,12 +1,12 @@
 'use client'
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import L from 'leaflet'
 import {
     LayersControl, MapContainer, Marker, Popup,
     Polyline, TileLayer, useMap, ZoomControl
 } from 'react-leaflet'
-import { Crosshair } from 'lucide-react'
+import { Compass, Crosshair, LoaderCircle } from 'lucide-react'
 
 // ── Custom icons ──────────────────────────────────────────────
 const makePin = (color: string, label: string) =>
@@ -50,6 +50,35 @@ const FitBounds = ({ positions }: { positions: [number, number][] }) => {
     return null
 }
 
+const MapReadyHandler = ({ onReady }: { onReady: () => void }) => {
+    const map = useMap()
+
+    useEffect(() => {
+        map.whenReady(() => onReady())
+    }, [map, onReady])
+
+    return null
+}
+
+const MapRotationController = ({ rotation }: { rotation: number }) => {
+    const map = useMap()
+
+    useEffect(() => {
+        const container = map.getContainer()
+        container.style.transition = 'transform 0.25s ease'
+        container.style.transform = `rotate(${rotation}deg)`
+        container.style.transformOrigin = 'center center'
+
+        return () => {
+            container.style.transition = ''
+            container.style.transform = ''
+            container.style.transformOrigin = ''
+        }
+    }, [map, rotation])
+
+    return null
+}
+
 // ── Recenter controller ───────────────────────────────────────
 const RecenterControl = ({ positions }: { positions: [number, number][] }) => {
     const map = useMap()
@@ -86,16 +115,20 @@ type MapLocation = { label: string; lat: number; lng: number }
 
 type SearchMapProps = {
     locations: MapLocation[]
+    onLocationChanged?: (type: 'pickup' | 'drop', location: MapLocation) => void
     onRouteLoaded?: (route: { distanceKm: number | null; durationMin: number | null }) => void
 }
 
 // ── Main component ────────────────────────────────────────────
-const SearchMap = ({ locations, onRouteLoaded }: SearchMapProps) => {
+const SearchMap = ({ locations, onLocationChanged, onRouteLoaded }: SearchMapProps) => {
     const [pickup, setPickup] = useState<MapLocation | null>(null)
     const [drop, setDrop] = useState<MapLocation | null>(null)
     const [routeLine, setRouteLine] = useState<[number, number][]>([])
     const [distanceKm, setDistanceKm] = useState<number | null>(null)
     const [durationMin, setDurationMin] = useState<number | null>(null)
+    const [isMapLoading, setIsMapLoading] = useState(true)
+    const [isUpdatingLocation, setIsUpdatingLocation] = useState(false)
+    const [rotation, setRotation] = useState(0)
 
     useEffect(() => {
         setPickup(locations[0] ?? null)
@@ -153,9 +186,37 @@ const SearchMap = ({ locations, onRouteLoaded }: SearchMapProps) => {
         return [20.5937, 78.9629]
     }, [routeLine, pickup, drop])
 
-    const handleDrag = (type: 'pickup' | 'drop', pos: [number, number]) => {
-        if (type === 'pickup') setPickup(p => p ? { ...p, lat: pos[0], lng: pos[1] } : p)
-        else setDrop(p => p ? { ...p, lat: pos[0], lng: pos[1] } : p)
+    const reverseGeocode = useCallback(async (lat: number, lng: number) => {
+        try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
+                headers: { 'Accept-Language': 'en' }
+            })
+            const data = await res.json()
+            if (data?.display_name) return data.display_name as string
+        } catch {
+            // fall through
+        }
+        return `${lat.toFixed(4)}, ${lng.toFixed(4)}`
+    }, [])
+
+    const handleDrag = async (type: 'pickup' | 'drop', pos: [number, number]) => {
+        const nextLocation = { label: `${type === 'pickup' ? 'Pickup' : 'Drop'} location`, lat: pos[0], lng: pos[1] }
+        if (type === 'pickup') {
+            setPickup(nextLocation)
+        } else {
+            setDrop(nextLocation)
+        }
+
+        setIsUpdatingLocation(true)
+        const resolvedLabel = await reverseGeocode(pos[0], pos[1])
+        const updatedLocation = { ...nextLocation, label: resolvedLabel }
+        if (type === 'pickup') {
+            setPickup(updatedLocation)
+        } else {
+            setDrop(updatedLocation)
+        }
+        onLocationChanged?.(type, updatedLocation)
+        setIsUpdatingLocation(false)
     }
 
     // Mid-route distance badge icon
@@ -166,9 +227,13 @@ const SearchMap = ({ locations, onRouteLoaded }: SearchMapProps) => {
         })
         : null, [distanceKm])
 
+    const isBusy = isMapLoading || isUpdatingLocation
+
     return (
-        <div className='relative h-full w-full'>
+        <div className='relative h-full w-full overflow-hidden rounded-[28px]'>
             <MapContainer center={mapCenter} zoom={13} style={{ width: '100%', height: '100%' }} zoomControl={false}>
+                <MapReadyHandler onReady={() => setIsMapLoading(false)} />
+                <MapRotationController rotation={rotation} />
 
                 <ZoomControl position='topright' />
 
@@ -187,19 +252,14 @@ const SearchMap = ({ locations, onRouteLoaded }: SearchMapProps) => {
                     </LayersControl.BaseLayer>
                 </LayersControl>
 
-                {/* Recenter button — bottom-left of map controls */}
                 <RecenterControl positions={boundsPositions} />
 
                 {boundsPositions.length > 0 && <FitBounds positions={boundsPositions} />}
 
-                {/* Route polyline */}
                 {pickup && drop && routeLine.length > 0 && (
                     <>
-                        {/* Shadow line */}
                         <Polyline positions={routeLine} pathOptions={{ color: '#09090b', weight: 9, opacity: 0.08 }} />
-                        {/* Main line */}
                         <Polyline positions={routeLine} pathOptions={{ color: '#09090b', weight: 5, opacity: 1 }} />
-                        {/* Distance badge at midpoint */}
                         {distIcon && (() => {
                             const mid = routeLine[Math.floor(routeLine.length / 2)]
                             return <Marker position={mid} icon={distIcon} interactive={false} />
@@ -207,7 +267,6 @@ const SearchMap = ({ locations, onRouteLoaded }: SearchMapProps) => {
                     </>
                 )}
 
-                {/* Pickup marker */}
                 {pickup && (
                     <Marker position={[pickup.lat, pickup.lng]} icon={PICKUP_ICON} draggable
                         eventHandlers={{ dragend: e => handleDrag('pickup', [e.target.getLatLng().lat, e.target.getLatLng().lng]) }}>
@@ -215,7 +274,6 @@ const SearchMap = ({ locations, onRouteLoaded }: SearchMapProps) => {
                     </Marker>
                 )}
 
-                {/* Drop marker */}
                 {drop && (
                     <Marker position={[drop.lat, drop.lng]} icon={DROP_ICON} draggable
                         eventHandlers={{ dragend: e => handleDrag('drop', [e.target.getLatLng().lat, e.target.getLatLng().lng]) }}>
@@ -223,6 +281,36 @@ const SearchMap = ({ locations, onRouteLoaded }: SearchMapProps) => {
                     </Marker>
                 )}
             </MapContainer>
+
+            {isBusy && (
+                <div className='absolute inset-0 z-[1000] flex items-center justify-center bg-white/70 backdrop-blur-sm'>
+                    <div className='flex flex-col items-center gap-3 rounded-2xl border border-zinc-200 bg-white/95 px-5 py-4 shadow-xl'>
+                        <LoaderCircle size={24} className='animate-spin text-zinc-900' />
+                        <div className='text-center'>
+                            <p className='text-sm font-semibold text-zinc-900'>{isUpdatingLocation ? 'Updating location…' : 'Loading map…'}</p>
+                            <p className='text-xs text-zinc-500'>Preparing route and address details</p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <div className='absolute bottom-4 right-4 z-[900] flex flex-col gap-2'>
+                <button
+                    type='button'
+                    onClick={() => setRotation(prev => (prev + 45) % 360)}
+                    className='flex h-11 w-11 items-center justify-center rounded-2xl border border-zinc-200 bg-white shadow-lg transition hover:-translate-y-0.5 hover:bg-zinc-50'
+                    title='Rotate map'
+                >
+                    <Compass size={18} className='text-zinc-900' />
+                </button>
+                <button
+                    type='button'
+                    onClick={() => setRotation(0)}
+                    className='rounded-2xl border border-zinc-200 bg-white px-3 py-2 text-xs font-semibold text-zinc-700 shadow-lg transition hover:bg-zinc-50'
+                >
+                    Reset
+                </button>
+            </div>
         </div>
     )
 }

@@ -13,9 +13,10 @@ export default async function Home() {
   const session = await auth();
   await connectDb();
   const user = await User.findOne({ email: session?.user?.email });
+  console.log("This is my userr---", user);
   return (
     <div className="w-full min-h-screen bg-white ">
-      <GeoUpdater userId={user._id} />
+      {/* <GeoUpdater userId={user._id} /> */}
       {user?.role === "rider" ?
         <>
           <Navbar />

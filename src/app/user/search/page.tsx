@@ -1,10 +1,11 @@
 'use client'
 
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ArrowLeft, Bike, Car, Phone, Sparkles, Truck, Zap } from 'lucide-react'
+import { ArrowLeft, Bike, Car, Sparkles, Truck, Zap } from 'lucide-react'
 import { motion } from 'motion/react'
 import SearchMap from '@/components/SearchMap'
+import axios from 'axios'
 
 const vehicleMeta: Record<string, { label: string; icon: typeof Bike }> = {
   bike: { label: 'Bike', icon: Bike },
@@ -37,20 +38,49 @@ const SearchPage = () => {
   const dropLng = Number(searchParams.get('droplng') ?? '0')
 
   const vehicleLabel = vehicleMeta[vehicle]?.label ?? 'Vehicle'
-  const VehicleIcon = vehicleMeta[vehicle]?.icon ?? Bike
 
   const [routeDistance, setRouteDistance] = useState<string | null>(null)
   const [routeDuration, setRouteDuration] = useState<string | null>(null)
+  const [pickupLocation, setPickupLocation] = useState<MapLocation>({ label: pickup, lat: pickupLat, lng: pickupLng })
+  const [dropLocation, setDropLocation] = useState<MapLocation>({ label: drop, lat: dropLat, lng: dropLng })
 
-  const locations = useMemo<MapLocation[]>(() => [
-    { label: pickup, lat: pickupLat, lng: pickupLng },
-    { label: drop, lat: dropLat, lng: dropLng },
-  ], [drop, dropLat, dropLng, pickup, pickupLat, pickupLng])
+  useEffect(() => {
+    setPickupLocation({ label: pickup, lat: pickupLat, lng: pickupLng })
+  }, [pickup, pickupLat, pickupLng])
+
+  useEffect(() => {
+    setDropLocation({ label: drop, lat: dropLat, lng: dropLng })
+  }, [drop, dropLat, dropLng])
+
+  const locations = useMemo<MapLocation[]>(() => [pickupLocation, dropLocation], [pickupLocation, dropLocation])
+
+  const getNearByVehicles = async (latitude: number, longitude: number, vehicleType: string) => {
+    try {
+      const { data } = await axios.post('/api/vehicles/near-by', {
+        latitude, longitude, vehicleType
+      })
+      console.log('data----', data)
+    } catch (error) {
+      console.log(error)
+    }
+  }
 
   const handleRouteLoaded = (route: { distanceKm: number | null; durationMin: number | null }) => {
     setRouteDistance(route.distanceKm !== null ? `${route.distanceKm}` : null)
     setRouteDuration(route.durationMin !== null ? `${route.durationMin}` : null)
   }
+
+  const handleLocationChanged = (type: 'pickup' | 'drop', location: MapLocation) => {
+    if (type === 'pickup') {
+      setPickupLocation(location)
+    } else {
+      setDropLocation(location)
+    }
+  }
+
+  useEffect(() => {
+    getNearByVehicles(pickupLat, pickupLng, vehicle)
+  }, [pickupLat, pickupLng, vehicle])
 
   return (
     <div className='min-h-screen p-9'>
@@ -80,7 +110,7 @@ const SearchPage = () => {
           </div>
 
           <div className='mt-6 overflow-hidden rounded-[28px] border border-zinc-200 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.06)]' style={{ height: '60vh' }}>
-            <SearchMap locations={locations} onRouteLoaded={handleRouteLoaded} />
+            <SearchMap locations={locations} onLocationChanged={handleLocationChanged} onRouteLoaded={handleRouteLoaded} />
           </div>
 
           <div className='mt-6 rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm'>
@@ -109,7 +139,7 @@ const SearchPage = () => {
                   <span className='inline-flex h-2.5 w-2.5 rounded-full bg-zinc-900' />
                   Pickup
                 </div>
-                <p className='mt-3 text-sm font-semibold text-zinc-900'>{pickup}</p>
+                <p className='mt-3 text-sm font-semibold text-zinc-900'>{pickupLocation.label}</p>
                 <p className='mt-2 text-sm text-zinc-500'>{pickupCountry || 'Country not provided'}</p>
               </div>
               <div className='rounded-3xl bg-zinc-50 p-5'>
@@ -117,7 +147,7 @@ const SearchPage = () => {
                   <span className='inline-flex h-2.5 w-2.5 rounded-full bg-zinc-900' />
                   Drop
                 </div>
-                <p className='mt-3 text-sm font-semibold text-zinc-900'>{drop}</p>
+                <p className='mt-3 text-sm font-semibold text-zinc-900'>{dropLocation.label}</p>
                 <p className='mt-2 text-sm text-zinc-500'>{dropCountry || 'Country not provided'}</p>
               </div>
             </div>
