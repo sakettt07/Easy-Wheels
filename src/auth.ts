@@ -1,12 +1,21 @@
-import NextAuth from "next-auth"
+import NextAuth, { CredentialsSignin } from "next-auth"
 import Credentials from "next-auth/providers/credentials"
 import connectDb from "./lib/db";
 import User from "./models/user.model";
 import bcrypt from "bcryptjs";
 import Google from "next-auth/providers/google";
+import { authConfig } from "./auth.config";
+
+class UserNotFoundError extends CredentialsSignin {
+    code = "user_not_found"
+}
+
+class IncorrectPasswordError extends CredentialsSignin {
+    code = "incorrect_password"
+}
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-    // debug: true,
+    ...authConfig,
     providers: [
         Credentials({
             credentials: {
@@ -15,18 +24,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             },
             async authorize(credentials, request) {
                 if (!credentials.email || !credentials.password) {
-                    throw Error("Missing credentials");
+                    throw new CredentialsSignin("Missing credentials");
                 }
                 const email = credentials.email;
                 const password = credentials.password as string;
                 await connectDb();
                 const user = await User.findOne({ email });
                 if (!user) {
-                    throw Error("User doesn't exist!");
+                    throw new UserNotFoundError();
                 }
                 const isMatched = await bcrypt.compare(password, user.password);
                 if (!isMatched) {
-                    throw Error("Incorrect Password");
+                    throw new IncorrectPasswordError();
                 }
                 return {
                     id: user._id,
@@ -42,6 +51,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         })
     ],
     callbacks: {
+        ...authConfig.callbacks,
         async signIn({ user, account }) {
             if (account?.provider === "google") {
                 await connectDb();
@@ -56,34 +66,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 user.role = dbuser.role
             }
             return true;
-        },
-        async jwt({ token, user }) {
-            if (user) {
-                token.name = user.name,
-                    token.id = user.id,
-                    token.email = user.email,
-                    token.role = user.role
-            }
-            return token
-        },
-        async session({ token, session }) {
-            if (session.user) {
-                session.user.name = token.name,
-                    session.user.id = token.id as string,
-                    session.user.email = token.email as string,
-                    session.user.role = token.role as string
-            }
-            return session
         }
-    },
-    pages: {
-        signIn: "/signin",
-        error: "/signin"
-    },
-    session: {
-        maxAge: 10 * 24 * 60 * 60,
-        strategy: "jwt"
-    },
-    secret: process.env.AUTH_SECRET
-
+    }
 })

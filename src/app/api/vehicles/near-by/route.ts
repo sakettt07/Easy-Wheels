@@ -1,7 +1,6 @@
 import connectDb from "@/lib/db";
 import User from "@/models/user.model";
 import Vehicle from "@/models/vehicle.model";
-import { TruckElectric } from "lucide-react";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -26,7 +25,7 @@ export async function POST(req: NextRequest) {
                 $near: {
                     $geometry: {
                         type: "Point",
-                        coordinated: [longitude, latitude]
+                        coordinates: [longitude, latitude]
                     },
                     $maxDistance: 4000
                 }
@@ -42,7 +41,7 @@ export async function POST(req: NextRequest) {
         const vehicles = await Vehicle.find({
             owner: {
                 $in: riderIds
-            }, type: vehicleType, status: "approved", isActive: TruckElectric
+            }, type: vehicleType, status: "approved", isActive: true
         }).lean();
         return NextResponse.json(vehicles, { status: 200 });
 

@@ -4,31 +4,69 @@ import React, { useEffect, useRef } from 'react'
 
 const GeoUpdater = ({ userId }: { userId: string }) => {
     const socketRef = useRef<any>(null);
+    const watcherRef = useRef<number | null>(null);
 
     useEffect(() => {
         if (!userId) return;
 
-        if (!navigator.geolocation) return;
-
-        socketRef.current = getSocket()
-        socketRef.current.emit("identity", userId)
-
-        const watcher = navigator.geolocation.watchPosition(({ coords }) => {
-            socketRef.current.emit("update-location", {
-                userId,
-                latitude: coords.latitude,
-                longitude: coords.longitude
-            })
-        }, (err) => {
-            console.log(err)
-        }, {
-            enableHighAccuracy: true,
-            maximumAge: 5000
-        })
-        return () => {
-            navigator.geolocation.clearWatch(watcher);
+        if (!navigator.geolocation) {
+            console.error('[GeoUpdater] Geolocation not supported');
+            return;
         }
-    }, [userId])
+
+        const socket = getSocket();
+        socketRef.current = socket;
+
+        // Wait for socket to be connected before emitting identity
+        const connectHandler = () => {
+            console.log('[GeoUpdater] Socket connected, emitting identity:', userId);
+            socket.emit("identity", userId);
+            startWatchingLocation(socket, userId);
+        };
+
+        if (socket.connected) {
+            connectHandler();
+        } else {
+            socket.on('connect', connectHandler);
+        }
+
+        return () => {
+            if (watcherRef.current !== null) {
+                navigator.geolocation.clearWatch(watcherRef.current);
+                console.log('[GeoUpdater] Cleared geolocation watcher');
+            }
+            socket.off('connect', connectHandler);
+        };
+    }, [userId]);
+
+    const startWatchingLocation = (socket: any, userId: string) => {
+        if (watcherRef.current !== null) {
+            navigator.geolocation.clearWatch(watcherRef.current);
+        }
+
+        watcherRef.current = navigator.geolocation.watchPosition(
+            ({ coords }) => {
+                const locationData = {
+                    userId,
+                    latitude: coords.latitude,
+                    longitude: coords.longitude
+                };
+                console.log('[GeoUpdater] Emitting location:', locationData);
+                console.log('[GeoUpdater] Socket connected status:', socket.connected);
+                socket.emit("update-location", locationData);
+            },
+            (err) => {
+                console.error('[GeoUpdater] Geolocation error:', err.code, err.message);
+                console.error('[GeoUpdater] Full error object:', err);
+            },
+            {
+                enableHighAccuracy: true,
+                maximumAge: 5000,
+                timeout: 10000
+            }
+        );
+    };
+
     return null;
 }
 

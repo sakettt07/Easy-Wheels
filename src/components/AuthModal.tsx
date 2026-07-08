@@ -68,8 +68,25 @@ const AuthModal = ({ open, onClose }: propType) => {
                 // Reset form
                 setEmail("");
                 setPassword("");
+                setErrorMessage("");
             } else {
-                setErrorMessage(res?.error || "Login failed");
+                let msg = "Login failed";
+                if (res?.error === "user_not_found") {
+                    msg = "No account found with this email.";
+                } else if (res?.error === "incorrect_password") {
+                    msg = "Incorrect password. Please try again.";
+                } else if (res?.error === "CredentialsSignin") {
+                    msg = "Invalid email or password.";
+                } else if (res?.error) {
+                    if (res.error.includes("user_not_found")) {
+                        msg = "No account found with this email.";
+                    } else if (res.error.includes("incorrect_password")) {
+                        msg = "Incorrect password. Please try again.";
+                    } else {
+                        msg = res.error;
+                    }
+                }
+                setErrorMessage(msg);
             }
             setLoading(false);
         } catch (error) {

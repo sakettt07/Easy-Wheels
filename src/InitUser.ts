@@ -5,6 +5,7 @@ import useGetMe from './hooks/useGetMe';
 import { useDispatch } from 'react-redux';
 import { clearUserData } from './redux/userSlice';
 import { clearPersistedState } from './redux/persistedSlice';
+import { disconnectSocket } from './lib/socket';
 
 const InitUser = () => {
     const { status } = useSession();
@@ -23,6 +24,7 @@ const InitUser = () => {
         if (status === "unauthenticated") {
             dispatch(clearUserData())
             clearPersistedState()
+            disconnectSocket()
         }
     }, [status, dispatch])
 

@@ -16,7 +16,7 @@ export default async function Home() {
   console.log("This is my userr---", user);
   return (
     <div className="w-full min-h-screen bg-white ">
-      {/* <GeoUpdater userId={user._id} /> */}
+      {user && <GeoUpdater userId={user._id.toString()} />}
       {user?.role === "rider" ?
         <>
           <Navbar />
