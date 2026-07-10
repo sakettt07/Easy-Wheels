@@ -119,13 +119,32 @@ const SearchPage = () => {
   }
 
   const handleConfirmBook = () => {
-    setBookingStatus('requesting')
-    setTimeout(() => {
-      setBookingStatus('confirmed')
-      setTimeout(() => {
-        router.push('/bookings')
-      }, 1500)
-    }, 2500)
+    if (!bookingVehicle) return
+    const fare = Math.max(
+      Math.round((bookingVehicle.baseFare ?? 0) + (Number(routeDistance) || 0) * (bookingVehicle.pricePerKM ?? 0)),
+      bookingVehicle.baseFare ?? 0
+    )
+    
+    const params = new URLSearchParams()
+    params.set('pickup', pickupLocation.label)
+    params.set('drop', dropLocation.label)
+    params.set('vehicleType', bookingVehicle.type || '')
+    params.set('vehicleModel', bookingVehicle.vehicleModel || '')
+    if (bookingVehicle.imageUrl) {
+        params.set('vehicleImage', bookingVehicle.imageUrl)
+    }
+    params.set('mobile', mobile)
+    params.set('fare', fare.toString())
+    
+    // Additional parameters required for the booking API
+    params.set('riderId', bookingVehicle.owner)
+    params.set('vehicleId', bookingVehicle._id)
+    params.set('pickupLat', pickupLocation.lat.toString())
+    params.set('pickupLng', pickupLocation.lng.toString())
+    params.set('dropLat', dropLocation.lat.toString())
+    params.set('dropLng', dropLocation.lng.toString())
+    
+    router.push(`/user/checkout?${params.toString()}`)
   }
 
   return (
