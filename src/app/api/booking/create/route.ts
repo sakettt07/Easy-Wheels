@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
         }
         const existing = await Booking.findOne({
             user: session.user.id,
-            status: { $in: ["requested", "awaiting_payment", "confirmed", "started"] }
+            bookingStatus: { $in: ["requested", "awaiting_payment", "confirmed", "started"] }
         })
         if (existing) {
             return NextResponse.json({
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({
             message: "Booking created successfully",
-            bookingId: booking._id
+            booking
         }, {
             status: 200
         })

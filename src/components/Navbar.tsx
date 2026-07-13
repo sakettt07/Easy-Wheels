@@ -7,26 +7,40 @@ import { usePathname, useRouter } from 'next/navigation';
 import AuthModal from './AuthModal';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/redux/store';
-import { Bike, Car, ChevronRight, Home, BookOpen, Info, Phone, LogOut, Menu, Truck, User } from 'lucide-react';
+import { Bike, Car, ChevronRight, Home, BookOpen, Info, Phone, LogOut, Menu, Truck, User, Clock, Navigation } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { setUserData } from '@/redux/userSlice';
+import axios from 'axios';
 
-const navItem = [
-    { name: "Home", path: "/", icon: Home },
-    { name: "Bookings", path: "/bookings", icon: BookOpen },
-    { name: "About Us", path: "/about-us", icon: Info },
-    { name: "Contact", path: "/contact", icon: Phone }
-];
+
 
 const Navbar = () => {
     const pathName = usePathname();
     const [authOpen, setAuthOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [pendingCount, setPendingCount] = useState(0);
     const { userData } = useSelector((state: RootState) => state.user);
     const dispatch = useDispatch<AppDispatch>();
     const profileRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
+
+    const currentNavItems = React.useMemo(() => {
+        if (userData?.role === "rider") {
+            return [
+                { name: "Home", path: "/", icon: Home },
+                { name: "Pending Requests", path: "/rider/pending-requests", icon: Clock },
+                { name: "Active Rides", path: "/rider/active-rides", icon: Navigation },
+                { name: "Bookings", path: "/rider/bookings", icon: BookOpen },
+            ];
+        }
+        return [
+            { name: "Home", path: "/", icon: Home },
+            { name: "Bookings", path: "/bookings", icon: BookOpen },
+            { name: "About Us", path: "/about-us", icon: Info },
+            { name: "Contact", path: "/contact", icon: Phone }
+        ];
+    }, [userData?.role]);
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
@@ -52,6 +66,22 @@ const Navbar = () => {
 
     const userInitial = userData?.name?.charAt(0)?.toUpperCase();
 
+    const fetchPendingCount = async () => {
+        try {
+            const { data } = await axios.get("/api/rider/booking/pending-request");
+            console.log("---daataaa---", data);
+            setPendingCount(data.count || 0);
+        } catch (error) {
+            console.error("error in fetching pending count", error);
+            setPendingCount(0);
+        }
+    }
+    useEffect(() => {
+        if (userData?.role == "rider") {
+            fetchPendingCount();
+        }
+    }, [userData?.role])
+
     return (
         <>
             <motion.div
@@ -72,15 +102,20 @@ const Navbar = () => {
 
                     {/* Desktop Nav Items */}
                     <div className="hidden md:flex items-center gap-6">
-                        {navItem.map((item, index) => {
+                        {currentNavItems.map((item, index) => {
                             const active = item.path === pathName;
                             return (
                                 <Link
                                     href={item.path}
                                     key={index}
-                                    className={`text-sm font-medium transition ${active ? "text-white" : "text-gray-400 hover:text-white"}`}
+                                    className={`relative text-sm font-medium transition ${active ? "text-white" : "text-gray-400 hover:text-white"}`}
                                 >
                                     {item.name}
+                                    {item.name === "Pending Requests" && pendingCount > 0 && (
+                                        <span className="absolute -top-3 -right-4 bg-white text-black text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                                            {pendingCount}
+                                        </span>
+                                    )}
                                 </Link>
                             );
                         })}
@@ -208,7 +243,7 @@ const Navbar = () => {
 
                             {/* 2×2 nav grid — each tile pops up with stagger */}
                             <nav className='px-4 pt-1 pb-3 grid grid-cols-2 gap-2.5'>
-                                {navItem.map((item, index) => {
+                                {currentNavItems.map((item, index) => {
                                     const active = item.path === pathName;
                                     const Icon = item.icon;
                                     return (
@@ -233,7 +268,14 @@ const Navbar = () => {
                                                 style={!active ? { background: 'rgba(255,255,255,0.04)' } : {}}
                                             >
                                                 <Icon size={22} strokeWidth={active ? 2.5 : 1.8} />
-                                                <span>{item.name}</span>
+                                                <span className="relative">
+                                                    {item.name}
+                                                    {item.name === "Pending Requests" && pendingCount > 0 && (
+                                                        <span className="absolute -top-2 -right-3 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                                                            {pendingCount}
+                                                        </span>
+                                                    )}
+                                                </span>
                                             </Link>
                                         </motion.div>
                                     );

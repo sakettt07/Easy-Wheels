@@ -23,7 +23,7 @@ interface IBooking {
     bookingStatus: BookingStatus,
     paymentStatus: PaymentStatus,
     adminCommission: number,
-    partnerAmount: number,
+    riderAmount: number,
     pickupOTP: string,
     pickupOTPExpire: Date,
     dropOTP: string,
@@ -90,7 +90,7 @@ const bookingSchema = new mongoose.Schema<IBooking>({
         required: true,
         default: 0
     },
-    partnerAmount: {
+    riderAmount: {
         type: Number,
         required: true,
         default: 0
