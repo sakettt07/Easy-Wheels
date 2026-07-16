@@ -22,6 +22,7 @@ interface IBooking {
     riderMobileNumber: string,
     bookingStatus: BookingStatus,
     paymentStatus: PaymentStatus,
+    paymentDeadline: Date,
     adminCommission: number,
     riderAmount: number,
     pickupOTP: string,
@@ -84,6 +85,9 @@ const bookingSchema = new mongoose.Schema<IBooking>({
         type: String,
         enum: ["pending", "paid", "failed", "cash"],
         default: "pending"
+    },
+    paymentDeadline: {
+        type: Date,
     },
     adminCommission: {
         type: Number,
