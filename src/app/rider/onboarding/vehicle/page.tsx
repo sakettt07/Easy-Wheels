@@ -53,7 +53,7 @@ export default function VehiclePage() {
 
     const canContinue = vehicleType && vehicleNumber.trim() && vehicleModel.trim()
     const meta = STEPS[0];
-    
+
     const handleVehicle = async () => {
         setErrorMessage("");
         try {
@@ -61,10 +61,10 @@ export default function VehiclePage() {
             const { data } = await axios.post("/api/rider/onboarding/vehicle", {
                 type: vehicleType, vehicleNumber, vehicleModel
             })
-            
+
             // Refresh user data to reflect the updated onboarding step
             await refreshUserData()
-            
+
             // Small delay to ensure data is updated before redirect
             setTimeout(() => {
                 router.push('/rider/onboarding/documents');
@@ -82,7 +82,6 @@ export default function VehiclePage() {
         const handleGetVehicle = async () => {
             try {
                 const { data } = await axios.get("/api/rider/onboarding/vehicle")
-                console.log("this is my vehcile data---", data);
                 setVehicleType(data.type)
                 setVehicleNumber(data.vehicleNumber)
                 setVehicleModel(data.vehicleModel)

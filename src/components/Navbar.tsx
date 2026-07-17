@@ -69,7 +69,6 @@ const Navbar = () => {
     const fetchPendingCount = async () => {
         try {
             const { data } = await axios.get("/api/rider/booking/pending-request");
-            console.log("---daataaa---", data);
             setPendingCount(data.count || 0);
         } catch (error) {
             console.error("error in fetching pending count", error);
