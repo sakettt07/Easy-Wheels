@@ -16,7 +16,7 @@ const filters = [
     { id: 'cancelled', label: 'Cancelled' },
 ];
 
-export default function RiderBookingsPage() {
+export default function UserBookingsPage() {
     const router = useRouter();
     const [bookings, setBookings] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -25,12 +25,12 @@ export default function RiderBookingsPage() {
     const fetchBooking = async () => {
         try {
             setLoading(true);
-            const { data } = await axios.get("/api/rider/booking");
+            const { data } = await axios.get("/api/user/bookings");
             if (data?.bookings) {
                 setBookings(data.bookings);
             }
         } catch (error) {
-            console.error("Error fetching rider bookings:", error);
+            console.error("Error fetching user bookings:", error);
         } finally {
             setLoading(false);
         }
@@ -66,7 +66,7 @@ export default function RiderBookingsPage() {
                         <ArrowLeft className="w-5 h-5 text-neutral-700" />
                     </button>
                     <div>
-                        <h1 className="text-3xl font-bold text-neutral-900 tracking-tight">Earnings & Bookings</h1>
+                        <h1 className="text-3xl font-bold text-neutral-900 tracking-tight">Your Rides & Bookings</h1>
                         <p className="text-neutral-500 mt-1">Manage and view your ride history and upcoming requests.</p>
                     </div>
                 </div>
@@ -86,7 +86,7 @@ export default function RiderBookingsPage() {
                             >
                                 {activeFilter === filter.id && (
                                     <motion.div
-                                        layoutId="active-filter-rider"
+                                        layoutId="active-filter-user"
                                         className="absolute inset-0 bg-zinc-900 rounded-full"
                                         transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                                     />
@@ -119,7 +119,7 @@ export default function RiderBookingsPage() {
                                         exit={{ opacity: 0, scale: 0.9 }}
                                         transition={{ duration: 0.2 }}
                                     >
-                                        <BookingCard booking={booking} viewRole="rider" />
+                                        <BookingCard booking={booking} viewRole="user" />
                                     </motion.div>
                                 ))}
                             </motion.div>

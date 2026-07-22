@@ -17,7 +17,7 @@ const CheckoutContent = () => {
     const [bookingStatus, setBookingStatus] = useState<string | null>(null);
     const [bookingId, setBookingId] = useState<string | null>(null);
     const [paymentMethod, setPaymentMethod] = useState<'cash' | 'online' | null>(null);
-    
+
     // States for success/failure animations
     const [paymentStatus, setPaymentStatus] = useState<'success' | 'error' | null>(null);
     const [paymentMessage, setPaymentMessage] = useState("");
@@ -125,7 +125,7 @@ const CheckoutContent = () => {
                     exit={{ opacity: 0, scale: 0.9 }}
                     className="max-w-xl mx-auto mt-8 bg-emerald-500 rounded-3xl p-12 shadow-xl border border-emerald-400 text-center text-white"
                 >
-                    <motion.div 
+                    <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ type: "spring", bounce: 0.5, delay: 0.2 }}
@@ -149,7 +149,7 @@ const CheckoutContent = () => {
                     exit={{ opacity: 0, scale: 0.9 }}
                     className="max-w-xl mx-auto mt-8 bg-red-500 rounded-3xl p-12 shadow-xl border border-red-400 text-center text-white"
                 >
-                    <motion.div 
+                    <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ type: "spring", bounce: 0.5, delay: 0.2 }}
@@ -161,7 +161,7 @@ const CheckoutContent = () => {
                     <p className="text-red-100 font-medium mb-6">
                         {paymentMessage || "Something went wrong. Please try again."}
                     </p>
-                    <button 
+                    <button
                         onClick={() => {
                             setPaymentStatus(null);
                             setIsProceeding(false);
@@ -414,12 +414,12 @@ const CheckoutContent = () => {
         try {
             setIsProceeding(true);
             setError("");
-            
+
             if (paymentMethod === 'cash') {
                 // Cash method API
                 const { data } = await axios.get(`/api/booking/${bookingId}/confirm`);
                 console.log("Cash booking confirmed:", data);
-                
+
                 setPaymentStatus('success');
                 setPaymentMessage("Cash booking successfully confirmed!");
                 setTimeout(() => {
@@ -427,7 +427,7 @@ const CheckoutContent = () => {
                 }, 2000);
                 return;
             }
-            
+
             // Online method API (Razorpay)
             const scriptLoaded = await loadRazorpayScript();
             if (!scriptLoaded) {
@@ -445,7 +445,7 @@ const CheckoutContent = () => {
                 currency: data.orderDetails.currency,
                 name: "EasyWheels",
                 description: "Complete your ride booking",
-                image: "/logo.svg",
+                image: "/razlogo.png",
                 order_id: data.orderDetails.id,
                 handler: async function (response: any) {
                     try {
@@ -455,13 +455,13 @@ const CheckoutContent = () => {
                             razorpay_order_id: response.razorpay_order_id,
                             razorpay_signature: response.razorpay_signature
                         });
-                        
+
                         if (!verifyData.success) {
                             setPaymentStatus('error');
                             setPaymentMessage(verifyData.message || "Payment verification failed.");
                             return;
                         }
-                        
+
                         console.log("Payment verified:", verifyData);
                         setPaymentStatus('success');
                         setPaymentMessage("Online payment successfully verified!");
@@ -474,17 +474,17 @@ const CheckoutContent = () => {
                     }
                 },
                 modal: {
-                    ondismiss: function() {
+                    ondismiss: function () {
                         setIsProceeding(false);
                     }
                 }
             });
-            
+
             paymentObject.on('payment.failed', function (response: any) {
                 setPaymentStatus('error');
                 setPaymentMessage(response.error.description || "Payment failed");
             });
-            
+
             paymentObject.open();
 
         }
