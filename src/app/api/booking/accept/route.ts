@@ -9,21 +9,20 @@ export async function GET(req: NextRequest) {
         await connectDb();
         const session = await auth()
         if (!session?.user?.id) {
-            return NextResponse.json({
-                message: "unauthorized"
-            }, { status: 401 })
+            return NextResponse.json({ booking: null })
         }
         const user = await User.findOne({ email: session?.user?.email })
         const booking = await Booking.findOne({
-            user: user._id
+            user: user._id,
+            bookingStatus: { $in: ["requested", "awaiting_payment", "confirmed", "started"] }
         })
         if (!booking) {
             return NextResponse.json({
-                message: "booking not found"
-            }, { status: 404 })
+                booking: "idle"
+            })
         }
         return NextResponse.json({
-
+            booking
         })
 
 
