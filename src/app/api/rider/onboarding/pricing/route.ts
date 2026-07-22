@@ -9,7 +9,6 @@ export async function POST(req: NextRequest) {
     try {
         await connectDb();
         const session = await auth();
-        console.log("session----", session);
         if (!session || !session.user?.email) {
             return Response.json(
                 {
@@ -19,7 +18,6 @@ export async function POST(req: NextRequest) {
             );
         }
         const rider = await User.findOne({ email: session.user.email })
-        console.log("rider----", rider);
 
         if (!rider) {
             return Response.json(

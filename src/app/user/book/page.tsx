@@ -179,11 +179,10 @@ const AddressField = ({
     <div className='relative w-full'>
       {label && <p className='mb-1.5 text-[9px] font-black uppercase tracking-[0.18em] text-zinc-400'>{label}</p>}
       <div
-        className={`flex items-center gap-3 rounded-2xl border bg-white px-4 py-3.5 transition-all duration-200 ${
-          focused
-            ? 'border-zinc-950 shadow-[0_0_0_4px_rgba(9,9,11,0.05)]'
-            : 'border-zinc-200/80 hover:border-zinc-300'
-        }`}
+        className={`flex items-center gap-3 rounded-2xl border bg-white px-4 py-3.5 transition-all duration-200 ${focused
+          ? 'border-zinc-950 shadow-[0_0_0_4px_rgba(9,9,11,0.05)]'
+          : 'border-zinc-200/80 hover:border-zinc-300'
+          }`}
       >
         <span className='shrink-0 text-zinc-400'>{icon}</span>
         <input
@@ -348,7 +347,7 @@ const BookingPage = () => {
   return (
     <div className='min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(9,9,11,0.03),_transparent_45%),linear-gradient(135deg,_#f5f5f5,_#fbfbfb)] px-4 py-6 sm:px-6 sm:py-10 lg:px-8 flex items-center justify-center'>
       <div className='mx-auto flex w-full max-w-5xl flex-col gap-6 lg:flex-row items-stretch'>
-        
+
         {/* Left Side: Booking Form */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
@@ -387,10 +386,10 @@ const BookingPage = () => {
 
           {/* Form Content */}
           <div className='mt-6 grid gap-6 lg:grid-cols-[1.05fr_0.95fr]'>
-            
+
             {/* Column 1: Vehicle & Phone */}
             <div className='space-y-6'>
-              
+
               {/* Step 1: Choose Vehicle */}
               <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
                 <div className='mb-3.5 flex items-center gap-2'>
@@ -411,15 +410,13 @@ const BookingPage = () => {
                         whileHover={{ y: -2 }}
                         whileTap={{ scale: 0.97 }}
                         onClick={() => setVehicle(option.id)}
-                        className={`relative flex flex-col items-center gap-2 rounded-2xl border p-3 transition-all duration-300 cursor-pointer ${
-                          isActive
-                            ? 'border-zinc-900 bg-zinc-900 text-white shadow-[0_12px_20px_rgba(9,9,11,0.12)]'
-                            : 'border-zinc-100 bg-zinc-50/50 text-zinc-600 hover:border-zinc-300 hover:bg-white'
-                        }`}
+                        className={`relative flex flex-col items-center gap-2 rounded-2xl border p-3 transition-all duration-300 cursor-pointer ${isActive
+                          ? 'border-zinc-900 bg-zinc-900 text-white shadow-[0_12px_20px_rgba(9,9,11,0.12)]'
+                          : 'border-zinc-100 bg-zinc-50/50 text-zinc-600 hover:border-zinc-300 hover:bg-white'
+                          }`}
                       >
-                        <div className={`flex h-9 w-9 items-center justify-center rounded-xl transition-colors ${
-                          isActive ? 'bg-white/10 text-white' : 'bg-white text-zinc-700 border border-zinc-100 shadow-sm'
-                        }`}>
+                        <div className={`flex h-9 w-9 items-center justify-center rounded-xl transition-colors ${isActive ? 'bg-white/10 text-white' : 'bg-white text-zinc-700 border border-zinc-100 shadow-sm'
+                          }`}>
                           <Icon size={16} strokeWidth={2} />
                         </div>
                         <div className='text-center'>
@@ -449,12 +446,11 @@ const BookingPage = () => {
                   </div>
                   <p className='text-xs font-black uppercase tracking-[0.24em] text-zinc-500'>Mobile number</p>
                 </div>
-                
-                <div className={`flex items-center gap-3 rounded-2xl border bg-white px-4 py-3.5 transition-all duration-200 ${
-                  mobile.length === 10
-                    ? 'border-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,0.05)]'
-                    : 'border-zinc-200 focus-within:border-zinc-950 focus-within:shadow-[0_0_0_4px_rgba(9,9,11,0.05)] hover:border-zinc-300'
-                }`}>
+
+                <div className={`flex items-center gap-3 rounded-2xl border bg-white px-4 py-3.5 transition-all duration-200 ${mobile.length === 10
+                  ? 'border-emerald-500 shadow-[0_0_0_4px_rgba(16,185,129,0.05)]'
+                  : 'border-zinc-200 focus-within:border-zinc-950 focus-within:shadow-[0_0_0_4px_rgba(9,9,11,0.05)] hover:border-zinc-300'
+                  }`}>
                   <Phone size={15} className='shrink-0 text-zinc-400' />
                   <span className='shrink-0 text-sm font-semibold text-zinc-500'>+91</span>
                   <div className='h-4 w-px shrink-0 bg-zinc-200' />
@@ -481,7 +477,7 @@ const BookingPage = () => {
 
             {/* Column 2: Pickup & Drop Location (Connected visual timeline) */}
             <div className='space-y-6'>
-              
+
               <div className='relative flex flex-col gap-5 pl-8'>
                 {/* Dashed vertical connector */}
                 <div className='absolute left-[13px] top-[40px] bottom-[40px] w-0.5 border-l border-dashed border-zinc-200 z-0' />
@@ -585,7 +581,7 @@ const BookingPage = () => {
 
           {/* Sidebar Content (Journey list with mini timelines) */}
           <div className='my-6 space-y-5 flex-1 min-h-0 overflow-y-auto pr-1'>
-            
+
             {/* Selected Vehicle Badge */}
             <div className='flex items-center gap-3 bg-white/5 border border-white/5 rounded-2xl p-3.5 shadow-sm'>
               <div className='flex h-11 w-11 items-center justify-center rounded-xl bg-white text-zinc-900 shadow-sm shrink-0'>
@@ -638,7 +634,7 @@ const BookingPage = () => {
                 <p className='text-xs font-bold text-white mt-0.5 truncate'>{mobile ? `+91 ${mobile}` : 'Enter your number'}</p>
               </div>
             </div>
-            
+
           </div>
 
           {/* Sidebar CTA Footer */}
