@@ -3,6 +3,7 @@ import connectDb from "@/lib/db";
 import Booking from "@/models/booking.model";
 import User from "@/models/user.model";
 import { NextRequest, NextResponse } from "next/server";
+import Vehicle from "@/models/vehicle.model";
 
 export async function GET(req: NextRequest) {
     try {
@@ -13,6 +14,11 @@ export async function GET(req: NextRequest) {
                 message: "unauthorized"
             }, { status: 401 })
         }
+
+        // Explicitly reference models to prevent tree-shaking
+        User;
+        Vehicle;
+
         const bookings = await Booking.find({
             rider: session.user.id,
         }).populate("user rider vehicle").sort({ createdAt: -1 })

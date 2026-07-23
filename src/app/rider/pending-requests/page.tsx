@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { useEffect, useState } from "react";
 import { MapPin, Navigation, IndianRupee, Clock, CheckCircle2, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { getSocket } from "@/lib/socket";
 
 interface Booking {
     _id: string;
@@ -68,6 +69,15 @@ const PendingRequest = () => {
             setActionType(null);
         }
     };
+    useEffect(() => {
+        const socket = getSocket();
+        socket.on("new-booking", (data: any) => {
+            console.log(data);
+        })
+        return () => {
+            socket.off("new-booking")
+        }
+    }, [])
 
     useEffect(() => {
         fetchPendingRequest();
