@@ -7,10 +7,11 @@ import { usePathname, useRouter } from 'next/navigation';
 import AuthModal from './AuthModal';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/redux/store';
-import { Bike, Car, ChevronRight, Home, BookOpen, Info, Phone, LogOut, Menu, Truck, User, Clock, Navigation } from 'lucide-react';
+import { Bike, Car, ChevronRight, Home, BookOpen, Info, Phone, LogOut, Menu, Truck, User, Clock, Navigation, ArrowRight } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { setUserData } from '@/redux/userSlice';
 import axios from 'axios';
+import { getSocket } from '@/lib/socket';
 
 
 
@@ -76,6 +77,17 @@ const Navbar = () => {
         }
     }
     useEffect(() => {
+        const socket = getSocket();
+        socket.on("new-booking", (data: any) => {
+            if (userData?.role === "rider") {
+                fetchPendingCount();
+            }
+        })
+        return () => {
+            socket.off("new-booking")
+        }
+    }, [userData?.role])
+    useEffect(() => {
         if (userData?.role == "rider") {
             fetchPendingCount();
         }
@@ -86,32 +98,36 @@ const Navbar = () => {
             <motion.div
                 initial={{ y: -60, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                className="fixed top-3 left-1/2 -translate-x-1/2 w-[94%] md:w-[86%] z-50 rounded-full bg-[#0b0b0b] text-white shadow-[0_15px_50px_rgba(0,0,0,0.7)] py-2"
+                className="fixed top-6 left-1/2 -translate-x-1/2 w-[94%] max-w-[1200px] z-50"
             >
-                <div className='max-w-7xl mx-auto px-4 md:px-8 flex items-center justify-between'>
+                <div className='flex items-center justify-between w-full bg-black/90 backdrop-blur-md border border-white/20 rounded-full px-6 py-3 shadow-[0_4px_30px_rgba(0,0,0,0.5)]'>
 
                     {/* Logo */}
-                    <Image
-                        src="/navLogos.png"
-                        alt="Navbar logo for easy wheels"
-                        width={95}
-                        height={80}
-                        priority
-                    />
+                    <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition">
+                        <Image
+                            src="/navLogos.png"
+                            alt="Navbar logo for easy wheels"
+                            width={48}
+                            height={48}
+                            className="object-contain drop-shadow-md w-10 h-10 md:w-12 md:h-12"
+                            priority
+                        />
+                        <span className="text-white font-bold tracking-wide text-lg sm:text-xl hidden sm:block">EasyWheels</span>
+                    </Link>
 
                     {/* Desktop Nav Items */}
-                    <div className="hidden md:flex items-center gap-6">
+                    <div className="hidden md:flex items-center gap-8">
                         {currentNavItems.map((item, index) => {
                             const active = item.path === pathName;
                             return (
                                 <Link
                                     href={item.path}
                                     key={index}
-                                    className={`relative text-sm font-medium transition ${active ? "text-white" : "text-gray-400 hover:text-white"}`}
+                                    className={`relative text-sm font-medium transition ${active ? "text-white" : "text-white/70 hover:text-white"}`}
                                 >
                                     {item.name}
                                     {item.name === "Pending Requests" && pendingCount > 0 && (
-                                        <span className="absolute -top-3 -right-4 bg-white text-black text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                                        <span className="absolute -top-3 -right-4 bg-white text-black text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">
                                             {pendingCount}
                                         </span>
                                     )}
@@ -128,14 +144,15 @@ const Navbar = () => {
                             {!userData ? (
                                 <button
                                     onClick={() => setAuthOpen(true)}
-                                    className='px-4 py-1.5 rounded-full bg-white text-black text-sm font-medium hover:bg-gray-100 transition'
+                                    className='px-6 py-2.5 rounded-full bg-blue-600 text-white text-sm font-bold hover:bg-blue-500 transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(37,99,235,0.4)]'
                                 >
-                                    Login
+                                    Get Started
+                                    <ArrowRight size={16} className="-rotate-45" />
                                 </button>
                             ) : (
                                 <>
                                     <button
-                                        className='w-11 h-11 rounded-full bg-white text-black font-bold hover:bg-gray-100 transition'
+                                        className='w-11 h-11 rounded-full bg-white text-black font-bold hover:scale-105 transition-all shadow-[0_4px_14px_rgba(255,255,255,0.25)]'
                                         onClick={() => setProfileOpen(p => !p)}
                                     >
                                         {userInitial}

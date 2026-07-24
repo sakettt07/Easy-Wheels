@@ -5,6 +5,7 @@ import { MapPin, Navigation, Calendar, ShieldCheck, ChevronRight, Car, Phone, Ar
 import Image from "next/image";
 import axios from "axios";
 import { motion, AnimatePresence } from "motion/react";
+import { getSocket } from "@/lib/socket";
 
 const CheckoutContent = () => {
     const searchParams = useSearchParams();
@@ -200,6 +201,30 @@ const CheckoutContent = () => {
                             Cancel Request
                         </button>
                     )}
+                </motion.div>
+            );
+        }
+
+        if (bookingStatus === 'rejected') {
+            return (
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex flex-col items-center justify-center py-24 px-4 text-center"
+                >
+                    <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mb-8">
+                        <XCircle className="w-10 h-10 text-red-500" />
+                    </div>
+                    <h2 className="text-3xl font-black text-zinc-900 mb-3 tracking-tight">Ride Rejected</h2>
+                    <p className="text-zinc-500 max-w-md mx-auto text-sm leading-relaxed mb-8">
+                        Unfortunately, the rider rejected your request. Please select a different ride or try again.
+                    </p>
+                    <button
+                        onClick={() => router.push("/")}
+                        className="bg-zinc-900 hover:bg-black text-white font-bold py-3 px-8 rounded-xl transition-all shadow-sm"
+                    >
+                        Find Another Ride
+                    </button>
                 </motion.div>
             );
         }
@@ -494,6 +519,19 @@ const CheckoutContent = () => {
             setPaymentMessage(err.response?.data?.message || "Something went wrong. Please try again");
         }
     }
+    useEffect(() => {
+        const socket = getSocket();
+        socket.on("booking-accepted", (data: any) => {
+            setBookingStatus(data);
+        })
+        socket.on("booking-rejected", (data: any) => {
+            setBookingStatus(data);
+        })
+        return () => {
+            socket.off("booking-accepted")
+            socket.off("booking-rejected")
+        }
+    }, [])
 
     return (
         <div

@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
 
-type BookingStatus = "requested" | "awaiting_payment" | "confirmed" | "started"
+export type BookingStatus = "idle" | "requested" | "awaiting_payment" | "confirmed" | "started"
     | "completed" | "cancelled" | "rejected" | "expired"
-type PaymentStatus = "pending" | "paid" | "failed" | "cash"
-interface IBooking {
+export type PaymentStatus = "pending" | "paid" | "failed" | "cash"
+export interface IBooking {
     user: mongoose.Types.ObjectId,
     rider: mongoose.Types.ObjectId,
     vehicle: mongoose.Types.ObjectId,

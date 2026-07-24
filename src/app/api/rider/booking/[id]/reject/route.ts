@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import connectDb from "@/lib/db";
 import Booking from "@/models/booking.model";
+import axios from "axios";
 
 export async function POST(req: NextRequest, context: { params: Promise<{ id: string }> }) {
     try {
@@ -18,7 +19,12 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
             }, { status: 404 })
         }
         booking.bookingStatus = "rejected"
-        await booking.save();
+        await booking.save()
+        await axios.post(`${process.env.NEXT_PUBLIC_SOCKET_SERVER_URL}/emit`, {
+            event: "booking-rejected",
+            to: booking.user,
+            data: booking.bookingStatus
+        })
         return Response.json({
             message: "Booking rejected successfully"
         }, { status: 200 })
