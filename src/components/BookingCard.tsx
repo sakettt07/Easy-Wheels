@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { MapPin, Calendar, Clock, User, Car, Phone, CheckCircle2 } from 'lucide-react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 interface BookingCardProps {
     booking: any;
@@ -26,6 +27,7 @@ const getStatusLabel = (status: string) => {
 };
 
 const BookingCard: React.FC<BookingCardProps> = ({ booking, viewRole }) => {
+    const router = useRouter();
     const formattedDate = new Date(booking.createdAt).toLocaleDateString('en-US', {
         weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
     });
@@ -148,6 +150,17 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, viewRole }) => {
                         </div>
                     </div>
                 </div>
+                {/* Active Ride Actions */}
+                {['confirmed', 'started'].includes(booking.bookingStatus) && (
+                    <div className="mt-6 pt-6 border-t border-neutral-100">
+                        <button
+                            onClick={() => router.push(`/${viewRole}/active-rides`)}
+                            className="w-full bg-zinc-900 hover:bg-black text-white font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all"
+                        >
+                            View Active Ride Details
+                        </button>
+                    </div>
+                )}
             </div>
         </motion.div>
     );

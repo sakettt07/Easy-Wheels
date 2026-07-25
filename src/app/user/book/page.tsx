@@ -78,29 +78,27 @@ const featureToPlace = (feature: {
   }
 }
 
-const searchPhoton = async (query: string, countryCode?: string): Promise<Place[]> => {
+const searchLocation = async (query: string, countryCode?: string): Promise<Place[]> => {
   if (!query || query.trim().length < 3) return []
 
   const params = new URLSearchParams({
-    q: query.trim(),
+    text: query.trim(),
     limit: '7',
-    lang: 'en',
+    apiKey: process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY || '',
   })
 
   if (countryCode) {
-    params.set('countrycode', countryCode)
+    params.set('filter', `countrycode:${countryCode.toLowerCase()}`)
   }
 
-  const { data } = await axios.get(`https://photon.komoot.io/api/?${params.toString()}`)
+  const { data } = await axios.get(`https://api.geoapify.com/v1/geocode/autocomplete?${params.toString()}`)
   const results = (data.features ?? []).map(featureToPlace)
 
-  if (!countryCode) return results
-
-  return results.filter((place: Place) => place.country.toLowerCase().includes('india'))
+  return results
 }
 
 const reverseGeocode = async (lat: number, lon: number): Promise<Place | null> => {
-  const { data } = await axios.get(`https://photon.komoot.io/reverse?lon=${lon}&lat=${lat}`)
+  const { data } = await axios.get(`https://api.geoapify.com/v1/geocode/reverse?lat=${lat}&lon=${lon}&apiKey=${process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY}`)
   if (!data.features?.length) return null
   return featureToPlace(data.features[0])
 }
@@ -159,7 +157,7 @@ const AddressField = ({
     if (!focused) return
 
     setLoading(true)
-    searchPhoton(debouncedValue, countryRestriction)
+    searchLocation(debouncedValue, countryRestriction)
       .then(setResults)
       .catch(() => setResults([]))
       .finally(() => setLoading(false))

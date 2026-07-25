@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
             bookingStatus: {
                 $in: ["confirmed", "started", "completed"]
             }
-        })
+        }).populate("user").populate("vehicle");
         return Response.json({
             message: "Fetching active rides successfully",
             booking

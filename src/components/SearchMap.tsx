@@ -188,11 +188,9 @@ const SearchMap = ({ locations, onLocationChanged, onRouteLoaded }: SearchMapPro
 
     const reverseGeocode = useCallback(async (lat: number, lng: number) => {
         try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
-                headers: { 'Accept-Language': 'en' }
-            })
+            const res = await fetch(`https://api.geoapify.com/v1/geocode/reverse?lat=${lat}&lon=${lng}&apiKey=${process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY}`)
             const data = await res.json()
-            if (data?.display_name) return data.display_name as string
+            if (data?.features?.[0]?.properties?.formatted) return data.features[0].properties.formatted as string
         } catch {
             // fall through
         }
