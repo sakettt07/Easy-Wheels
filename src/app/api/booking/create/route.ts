@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import connectDb from "@/lib/db";
 import Booking from "@/models/booking.model";
 import User from "@/models/user.model";
+import axios from "axios";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
@@ -55,6 +56,11 @@ export async function POST(request: NextRequest) {
             pickupOTPExpire: otpExpire,
             dropOTP,
             dropOTPExpire: otpExpire
+        })
+        await axios.post(`${process.env.NEXT_PUBLIC_SOCKET_SERVER_URL}/emit`, {
+            event: "new-booking",
+            to: riderId,
+            data: booking
         })
 
         return NextResponse.json({

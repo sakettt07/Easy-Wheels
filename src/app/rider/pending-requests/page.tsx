@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { useEffect, useState } from "react";
 import { MapPin, Navigation, IndianRupee, Clock, CheckCircle2, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { getSocket } from "@/lib/socket";
 
 interface Booking {
     _id: string;
@@ -54,12 +55,7 @@ const PendingRequest = () => {
         try {
             setActionId(id);
             setActionType('reject');
-            // Using a placeholder for reject endpoint
-            await axios.get(`/api/rider/booking/${id}/reject`).catch(() => {
-                // If reject API doesn't exist yet, we can simulate a successful UI removal
-                // or just log it. For now, optimistically remove from UI or refetch.
-                console.log("Reject API called. You may need to create this route.");
-            });
+            await axios.post(`/api/rider/booking/${id}/reject`);
             fetchPendingRequest();
         } catch (error) {
             console.error("Error rejecting booking", error);
@@ -68,6 +64,15 @@ const PendingRequest = () => {
             setActionType(null);
         }
     };
+    useEffect(() => {
+        const socket = getSocket();
+        socket.on("new-booking", (data: any) => {
+            fetchPendingRequest();
+        })
+        return () => {
+            socket.off("new-booking")
+        }
+    }, [])
 
     useEffect(() => {
         fetchPendingRequest();
