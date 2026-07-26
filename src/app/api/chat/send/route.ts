@@ -9,12 +9,11 @@ export async function POST(req: NextRequest) {
         if (!bookingId || !senderRole || !message) {
             return NextResponse.json({ message: "All fields are required", status: 400 });
         }
-        const chatMessage = new ChatMessage({
+        const chatMessage = await ChatMessage.create({
             bookingId,
             senderRole,
             message
         })
-        await chatMessage.save();
         return NextResponse.json({ message: "Message sent successfully", status: 200 });
     } catch (error) {
         return NextResponse.json({ message: "Internal server error at send message", status: 500 });
