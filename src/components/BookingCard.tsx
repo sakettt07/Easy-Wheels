@@ -154,7 +154,13 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, viewRole }) => {
                 {['confirmed', 'started'].includes(booking.bookingStatus) && (
                     <div className="mt-6 pt-6 border-t border-neutral-100">
                         <button
-                            onClick={() => router.push(`/${viewRole}/active-rides`)}
+                            onClick={() => {
+                                if (viewRole === 'user') {
+                                    router.push(`/user/ride/${(booking as any)._id}`)
+                                } else {
+                                    router.push(`/rider/active-rides`)
+                                }
+                            }}
                             className="w-full bg-zinc-900 hover:bg-black text-white font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all"
                         >
                             View Active Ride Details

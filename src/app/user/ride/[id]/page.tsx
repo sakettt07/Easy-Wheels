@@ -6,6 +6,7 @@ import { motion } from "motion/react";
 import { BookingStatus, IBooking } from "@/models/booking.model";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import { getSocket } from "@/lib/socket";
 
 const MAP_STATUS: Record<BookingStatus, "arriving" | "ongoing" | "completed"> = {
@@ -20,7 +21,10 @@ const MAP_STATUS: Record<BookingStatus, "arriving" | "ongoing" | "completed"> = 
     expired: "completed"
 }
 
-function page() {
+export default function Page() {
+    const params = useParams();
+    const bookingId = params?.id as string;
+
     const [booking, setBooking] = useState<IBooking | null>(null);
     const [loading, setLoading] = useState(false);
     const [driverPos, setDriverPosition] = useState<[number, number] | null>(null);
@@ -28,9 +32,12 @@ function page() {
     const [dropPosition, setDropPosition] = useState<[number, number] | null>(null)
 
     const fetchActiveBooking = async () => {
+        if (!bookingId) return;
         try {
             setLoading(true);
-            const { data } = await axios.get("/api/rider/active-rides");
+            const { data } = await axios.post("/api/user/active-ride", {
+                bookingId: bookingId
+            });
             console.log(data);
             const activeBooking = Array.isArray(data.booking) ? data.booking[0] : data.booking;
             setBooking(activeBooking);
@@ -46,31 +53,19 @@ function page() {
     }
     useEffect(() => {
         fetchActiveBooking();
-    }, [])
-    useEffect(() => {
-        if (!navigator.geolocation) return;
-        const socket = getSocket();
-        const watchId = navigator.geolocation.watchPosition((pos) => {
-            const lat = pos.coords.latitude
-            const lng = pos.coords.longitude
-            setDriverPosition([lat, lng])
-            socket.emit("driver-location-update", {
-                bookingId: booking?._id,
-                latitude: lat,
-                longitude: lng,
-            } as any)
-        }, (error) => {
-            console.log(error.message)
-        }, { enableHighAccuracy: true, timeout: 5000, maximumAge: 2000 });
-        return () => navigator.geolocation.clearWatch(watchId)
-    }, [])
+    }, [bookingId])
     useEffect(() => {
         const socket = getSocket();
-        socket.emit("join-ride", booking?._id);
+        socket.emit("join-ride", bookingId);
+        socket.on("driver-location-update", (data) => {
+            console.log(data);
+            setDriverPosition([data.latitude, data.longitude])
+        })
+
         return () => {
-            socket.off("join-ride");
+            socket.emit("leave-rider", bookingId);
         }
-    }, [booking?._id])
+    }, [bookingId])
 
     const [isExpanded, setIsExpanded] = useState(false);
 
@@ -125,4 +120,3 @@ function page() {
         </div>
     );
 }
-export default page

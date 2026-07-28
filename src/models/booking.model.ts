@@ -4,6 +4,7 @@ export type BookingStatus = "idle" | "requested" | "awaiting_payment" | "confirm
     | "completed" | "cancelled" | "rejected" | "expired"
 export type PaymentStatus = "pending" | "paid" | "failed" | "cash"
 export interface IBooking {
+    _id: mongoose.Types.ObjectId
     user: mongoose.Types.ObjectId,
     rider: mongoose.Types.ObjectId,
     vehicle: mongoose.Types.ObjectId,

@@ -27,6 +27,12 @@ export default function PanelContent({ booking, mapStatus }: PanelContentProps) 
     const { userData } = useSelector((state: RootState) => state.user)
     const riderId = typeof booking.rider === 'object' ? (booking.rider as any)?._id : booking.rider;
     const currentRole = userData?._id === riderId ? "rider" : "user";
+    
+    const isRider = currentRole === "rider";
+    const panelTitle = isRider ? "DRIVER PANEL" : "RIDE DETAILS";
+    const otherPartyName = isRider ? (booking.user as any)?.name : (booking.rider as any)?.name;
+    const otherPartyFallback = isRider ? "Customer" : "Driver";
+    const otherPartyPhone = isRider ? booking.userMobileNumber : booking.riderMobileNumber;
 
     return (
         <div className="h-full flex flex-col p-4 md:p-5 text-white relative overflow-hidden">
@@ -34,7 +40,7 @@ export default function PanelContent({ booking, mapStatus }: PanelContentProps) 
             <div className="flex items-start justify-between mb-4 shrink-0">
                 <div>
                     <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1">
-                        DRIVER PANEL
+                        {panelTitle}
                     </p>
                     <h2 className="text-xl md:text-2xl font-bold text-white">
                         {getStatusMessage(booking.bookingStatus)}
@@ -84,7 +90,7 @@ export default function PanelContent({ booking, mapStatus }: PanelContentProps) 
                                     <div className="absolute -bottom-1 -right-1 w-3 h-3 md:w-3.5 md:h-3.5 bg-emerald-500 rounded-full border-2 border-[#0f0f11]"></div>
                                 </div>
                                 <div>
-                                    <p className="text-sm md:text-base font-bold text-white capitalize">{(booking.user as any)?.name || 'Customer'}</p>
+                                    <p className="text-sm md:text-base font-bold text-white capitalize">{otherPartyName || otherPartyFallback}</p>
                                     <div className="inline-block bg-white text-black text-[9px] font-bold px-2 py-0.5 rounded-full mt-0.5 md:mt-1">
                                         Cash
                                     </div>
@@ -146,7 +152,7 @@ export default function PanelContent({ booking, mapStatus }: PanelContentProps) 
             {/* Action Buttons (Fixed at bottom) */}
             <div className="flex items-center gap-3 mt-2 shrink-0">
                 <a
-                    href={`tel:${booking.userMobileNumber}`}
+                    href={`tel:${otherPartyPhone}`}
                     className="flex-1 bg-zinc-50 hover:bg-white transition-colors py-3 md:py-3.5 rounded-2xl flex items-center justify-center gap-2 text-sm md:text-base font-bold text-zinc-900"
                 >
                     <Phone className="w-4 h-4 md:w-4 md:h-4" /> Call
