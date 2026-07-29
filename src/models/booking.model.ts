@@ -102,19 +102,15 @@ const bookingSchema = new mongoose.Schema<IBooking>({
     },
     pickupOTP: {
         type: String,
-        required: true
     },
     pickupOTPExpire: {
         type: Date,
-        required: true
     },
     dropOTP: {
         type: String,
-        required: true
     },
     dropOTPExpire: {
         type: Date,
-        required: true
     },
 
 }, { timestamps: true });

@@ -35,10 +35,7 @@ export async function POST(request: NextRequest) {
                 message: "You have already one pending booking"
             }, { status: 400 })
         }
-        const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
-        const pickupOTP = generateOTP();
-        const dropOTP = generateOTP();
-        const otpExpire = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
 
         const booking = await Booking.create({
             user: session.user.id,
@@ -52,10 +49,6 @@ export async function POST(request: NextRequest) {
             userMobileNumber: mobileNumber,
             riderMobileNumber: rider.contact || "Not provided",
             bookingStatus: "requested",
-            pickupOTP,
-            pickupOTPExpire: otpExpire,
-            dropOTP,
-            dropOTPExpire: otpExpire
         })
         await axios.post(`${process.env.NEXT_PUBLIC_SOCKET_SERVER_URL}/emit`, {
             event: "new-booking",

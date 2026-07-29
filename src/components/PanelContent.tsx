@@ -6,10 +6,12 @@ import { IBooking, BookingStatus } from '@/models/booking.model'
 import RideChat from './RideChat'
 import { useSelector } from 'react-redux'
 import { RootState } from '@/redux/store'
+import OTPActionCard from './OTPActionCard'
 
 interface PanelContentProps {
     booking: IBooking;
     mapStatus: "arriving" | "ongoing" | "completed";
+    routeInfo?: { distance: number | null, duration: number | null };
 }
 
 const getStatusMessage = (status: BookingStatus) => {
@@ -21,7 +23,7 @@ const getStatusMessage = (status: BookingStatus) => {
     }
 }
 
-export default function PanelContent({ booking, mapStatus }: PanelContentProps) {
+export default function PanelContent({ booking, mapStatus, routeInfo }: PanelContentProps) {
     const [chatOpen, setChatOpen] = useState(false);
 
     const { userData } = useSelector((state: RootState) => state.user)
@@ -49,7 +51,7 @@ export default function PanelContent({ booking, mapStatus }: PanelContentProps) 
 
                 <div className="flex items-center gap-1.5 bg-[#1a1a1c] border border-zinc-800 text-zinc-300 px-3 py-1.5 rounded-full text-xs font-semibold">
                     <Zap className="w-3.5 h-3.5 text-yellow-500" />
-                    <span>0 min</span>
+                    <span>{routeInfo?.duration !== undefined && routeInfo?.duration !== null ? routeInfo.duration : '--'} min</span>
                 </div>
             </div>
 
@@ -66,7 +68,9 @@ export default function PanelContent({ booking, mapStatus }: PanelContentProps) 
                                 </div>
                                 <div>
                                     <p className="text-[9px] md:text-[10px] text-zinc-500 font-bold uppercase tracking-wider mb-0.5">ETA</p>
-                                    <p className="text-base md:text-lg font-bold text-white">0 <span className="text-xs md:text-sm font-medium text-zinc-400">min</span></p>
+                                    <p className="text-base md:text-lg font-bold text-white">
+                                        {routeInfo?.duration !== undefined && routeInfo?.duration !== null ? routeInfo.duration : '--'} <span className="text-xs md:text-sm font-medium text-zinc-400">min</span>
+                                    </p>
                                 </div>
                             </div>
 
@@ -141,6 +145,13 @@ export default function PanelContent({ booking, mapStatus }: PanelContentProps) 
                                 </div>
                             </div>
                         </div>
+                        
+                        {isRider && (booking.bookingStatus === 'confirmed' || booking.bookingStatus === 'started') && (
+                            <OTPActionCard 
+                                bookingId={(booking as any)._id} 
+                                actionType={booking.bookingStatus === 'confirmed' ? "pickup" : "drop"} 
+                            />
+                        )}
                     </div>
                 ) : (
                     <div className="flex flex-col h-full">

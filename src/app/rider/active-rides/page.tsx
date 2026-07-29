@@ -27,6 +27,8 @@ function page() {
     const [pickupPosition, setPickupPosition] = useState<[number, number] | null>(null)
     const [dropPosition, setDropPosition] = useState<[number, number] | null>(null)
 
+    const [routeInfo, setRouteInfo] = useState<{distance: number | null, duration: number | null}>({ distance: null, duration: null });
+
     const fetchActiveBooking = async () => {
         try {
             setLoading(true);
@@ -48,14 +50,14 @@ function page() {
         fetchActiveBooking();
     }, [])
     useEffect(() => {
-        if (!navigator.geolocation) return;
+        if (!navigator.geolocation || !booking?._id) return;
         const socket = getSocket();
         const watchId = navigator.geolocation.watchPosition((pos) => {
             const lat = pos.coords.latitude
             const lng = pos.coords.longitude
             setDriverPosition([lat, lng])
-            socket.emit("driver-location-update", {
-                bookingId: booking?._id,
+            socket.emit("rider-location-update", {
+                bookingId: booking._id,
                 latitude: lat,
                 longitude: lng,
             } as any)
@@ -63,12 +65,17 @@ function page() {
             console.log(error.message)
         }, { enableHighAccuracy: true, timeout: 5000, maximumAge: 2000 });
         return () => navigator.geolocation.clearWatch(watchId)
-    }, [])
+    }, [booking?._id])
     useEffect(() => {
+        if (!booking?._id) return;
         const socket = getSocket();
         socket.emit("join-ride", booking?._id);
+        socket.on("rider-location", ({ latitude, longitude }) => {
+            setDriverPosition([latitude, longitude])
+        })
         return () => {
             socket.off("join-ride");
+            socket.off("rider-location");
         }
     }, [booking?._id])
 
@@ -83,6 +90,7 @@ function page() {
                     mapStatus={booking ? MAP_STATUS[booking.bookingStatus] : 'arriving'}
                     pickupPosition={pickupPosition}
                     dropPosition={dropPosition}
+                    onRouteUpdate={(distance, duration) => setRouteInfo({ distance, duration })}
                 />
             </div>
 
@@ -94,6 +102,7 @@ function page() {
                         <PanelContent
                             booking={booking}
                             mapStatus={MAP_STATUS[booking.bookingStatus]}
+                            routeInfo={routeInfo}
                         />
                     </div>
 
@@ -117,6 +126,7 @@ function page() {
                             <PanelContent
                                 booking={booking}
                                 mapStatus={MAP_STATUS[booking.bookingStatus]}
+                                routeInfo={routeInfo}
                             />
                         </div>
                     </motion.div>

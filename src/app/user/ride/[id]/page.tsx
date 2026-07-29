@@ -31,6 +31,8 @@ export default function Page() {
     const [pickupPosition, setPickupPosition] = useState<[number, number] | null>(null)
     const [dropPosition, setDropPosition] = useState<[number, number] | null>(null)
 
+    const [routeInfo, setRouteInfo] = useState<{distance: number | null, duration: number | null}>({ distance: null, duration: null });
+
     const fetchActiveBooking = async () => {
         if (!bookingId) return;
         try {
@@ -57,13 +59,13 @@ export default function Page() {
     useEffect(() => {
         const socket = getSocket();
         socket.emit("join-ride", bookingId);
-        socket.on("driver-location-update", (data) => {
-            console.log(data);
-            setDriverPosition([data.latitude, data.longitude])
+        socket.on("rider-location", ({ latitude, longitude }) => {
+            setDriverPosition([latitude, longitude])
         })
 
         return () => {
-            socket.emit("leave-rider", bookingId);
+            socket.off("leave-rider");
+            socket.off("rider-location");
         }
     }, [bookingId])
 
@@ -78,6 +80,7 @@ export default function Page() {
                     mapStatus={booking ? MAP_STATUS[booking.bookingStatus] : 'arriving'}
                     pickupPosition={pickupPosition}
                     dropPosition={dropPosition}
+                    onRouteUpdate={(distance, duration) => setRouteInfo({ distance, duration })}
                 />
             </div>
 
@@ -89,6 +92,7 @@ export default function Page() {
                         <PanelContent
                             booking={booking}
                             mapStatus={MAP_STATUS[booking.bookingStatus]}
+                            routeInfo={routeInfo}
                         />
                     </div>
 
@@ -112,6 +116,7 @@ export default function Page() {
                             <PanelContent
                                 booking={booking}
                                 mapStatus={MAP_STATUS[booking.bookingStatus]}
+                                routeInfo={routeInfo}
                             />
                         </div>
                     </motion.div>

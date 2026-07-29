@@ -113,14 +113,15 @@ const RecenterControl = ({ positions }: { positions: [number, number][] }) => {
     )
 }
 
-export default function LiveRideMap({ driverLocation, mapStatus, pickupPosition, dropPosition }: {
+export default function LiveRideMap({ driverLocation, mapStatus, pickupPosition, dropPosition, onRouteUpdate }: {
     driverLocation?: [number, number] | null,
     mapStatus: "arriving" | "ongoing" | "completed",
     pickupPosition?: [number, number] | null,
-    dropPosition?: [number, number] | null
+    dropPosition?: [number, number] | null,
+    onRouteUpdate?: (distance: number | null, duration: number | null) => void
 }) {
-    const [routeToPickup, setRouteToPickup] = useState<{ line: [number, number][], distanceKm: number | null }>({ line: [], distanceKm: null })
-    const [routeToDrop, setRouteToDrop] = useState<{ line: [number, number][], distanceKm: number | null }>({ line: [], distanceKm: null })
+    const [routeToPickup, setRouteToPickup] = useState<{ line: [number, number][], distanceKm: number | null, durationMin: number | null }>({ line: [], distanceKm: null, durationMin: null })
+    const [routeToDrop, setRouteToDrop] = useState<{ line: [number, number][], distanceKm: number | null, durationMin: number | null }>({ line: [], distanceKm: null, durationMin: null })
     const [rotation, setRotation] = useState(0)
 
     useEffect(() => {
@@ -134,29 +135,43 @@ export default function LiveRideMap({ driverLocation, mapStatus, pickupPosition,
                         ([lng, lat]: [number, number]) => [lat, lng] as [number, number]
                     )
                     const distanceKm = Number((data.routes[0].distance / 1000).toFixed(1))
-                    return { line, distanceKm }
+                    const durationMin = Number((data.routes[0].duration / 60).toFixed(0))
+                    return { line, distanceKm, durationMin }
                 }
             } catch { }
             // fallback
-            return { line: [start, end], distanceKm: Number(haversineKm(start, end).toFixed(1)) }
+            return { line: [start, end], distanceKm: Number(haversineKm(start, end).toFixed(1)), durationMin: null }
         }
 
         const updateRoutes = async () => {
+            let activeDistance = null;
+            let activeDuration = null;
+
             if (mapStatus === 'arriving') {
                 if (driverLocation && pickupPosition) {
-                    setRouteToPickup(await fetchRoute(driverLocation, pickupPosition))
+                    const res = await fetchRoute(driverLocation, pickupPosition);
+                    setRouteToPickup(res)
+                    activeDistance = res.distanceKm;
+                    activeDuration = res.durationMin;
                 }
                 if (pickupPosition && dropPosition) {
                     setRouteToDrop(await fetchRoute(pickupPosition, dropPosition))
                 }
             } else if (mapStatus === 'ongoing') {
-                setRouteToPickup({ line: [], distanceKm: null })
+                setRouteToPickup({ line: [], distanceKm: null, durationMin: null })
                 if (driverLocation && dropPosition) {
-                    setRouteToDrop(await fetchRoute(driverLocation, dropPosition))
+                    const res = await fetchRoute(driverLocation, dropPosition);
+                    setRouteToDrop(res)
+                    activeDistance = res.distanceKm;
+                    activeDuration = res.durationMin;
                 }
             } else {
-                setRouteToPickup({ line: [], distanceKm: null })
-                setRouteToDrop({ line: [], distanceKm: null })
+                setRouteToPickup({ line: [], distanceKm: null, durationMin: null })
+                setRouteToDrop({ line: [], distanceKm: null, durationMin: null })
+            }
+
+            if (onRouteUpdate) {
+                onRouteUpdate(activeDistance, activeDuration);
             }
         }
 

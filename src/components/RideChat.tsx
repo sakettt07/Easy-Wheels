@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'motion/react'
 import { Send, Bot, RefreshCw } from 'lucide-react'
 import { IBooking } from '@/models/booking.model'
 import axios from 'axios'
+import { getSocket } from '@/lib/socket'
 
 type message = {
     bookingId: string
@@ -26,7 +27,9 @@ export default function RideChat({ currentRole, booking }: { currentRole: string
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        setTimeout(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+        }, 50);
     }
 
     useEffect(() => {
@@ -48,14 +51,19 @@ export default function RideChat({ currentRole, booking }: { currentRole: string
             createdAt: new Date().toISOString()
         }]);
         setLastMessage(currentText);
-
+        const socket = getSocket();
+        socket.emit("chat-message", {
+            bookingId: (booking as any)._id,
+            senderRole: currentRole,
+            message: currentText
+        });
+        
         try {
             await axios.post("/api/chat/send", {
                 bookingId: (booking as any)._id,
                 senderRole: currentRole,
                 message: currentText
             });
-            getMessages();
         } catch (error) {
             console.log("Error sending message", error);
         }
@@ -78,6 +86,27 @@ export default function RideChat({ currentRole, booking }: { currentRole: string
             console.log("Error fetching messages", error);
         }
     }
+    useEffect(() => {
+        const socket = getSocket();
+        
+        const handleMessage = ({ bookingId: incomingId, senderRole, message: incomingMessage }: { bookingId: string, senderRole: string, message: string }) => {
+            if (incomingId === (booking as any)._id) {
+                setMessages(prev => [...prev, {
+                    bookingId: incomingId,
+                    senderRole: senderRole as "rider" | "user",
+                    message: incomingMessage,
+                    createdAt: new Date().toISOString()
+                }]);
+                setLastMessage(incomingMessage);
+            }
+        };
+
+        socket.on("chat-message", handleMessage);
+
+        return () => {
+            socket.off("chat-message", handleMessage);
+        }
+    }, [booking])
 
     useEffect(() => {
         getMessages();
