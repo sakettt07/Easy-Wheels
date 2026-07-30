@@ -23,7 +23,8 @@ export interface IUser extends Document {
         type: "Point",
         coordinates: [number, number]
     };
-    isOnline: boolean
+    isOnline: boolean;
+    isBanned: boolean;
 }
 
 const userSchema = new mongoose.Schema<IUser>({
@@ -92,6 +93,10 @@ const userSchema = new mongoose.Schema<IUser>({
         type: Boolean,
         default: false,
         index: true
+    },
+    isBanned: {
+        type: Boolean,
+        default: false
     }
 }, {
     timestamps: true

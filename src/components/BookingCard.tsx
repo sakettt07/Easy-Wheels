@@ -26,6 +26,15 @@ const getStatusLabel = (status: string) => {
     return status.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 };
 
+const getPaymentStatusColor = (status: string) => {
+    switch (status?.toLowerCase()) {
+        case 'paid': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+        case 'cash': return 'bg-blue-100 text-blue-700 border-blue-200';
+        case 'pending': return 'bg-amber-100 text-amber-700 border-amber-200';
+        default: return 'bg-zinc-100 text-zinc-700 border-zinc-200';
+    }
+};
+
 const BookingCard: React.FC<BookingCardProps> = ({ booking, viewRole }) => {
     const router = useRouter();
     const formattedDate = new Date(booking.createdAt).toLocaleDateString('en-US', {
@@ -51,8 +60,15 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, viewRole }) => {
                     <span className="w-1 h-1 rounded-full bg-zinc-300"></span>
                     <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" /> {formattedTime}</span>
                 </div>
-                <div className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(booking.bookingStatus)}`}>
-                    {getStatusLabel(booking.bookingStatus)}
+                <div className="flex items-center gap-2">
+                    {booking.paymentStatus && (
+                        <div className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${getPaymentStatusColor(booking.paymentStatus)}`}>
+                            {booking.paymentStatus}
+                        </div>
+                    )}
+                    <div className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${getStatusColor(booking.bookingStatus)}`}>
+                        {getStatusLabel(booking.bookingStatus)}
+                    </div>
                 </div>
             </div>
 
@@ -142,11 +158,6 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, viewRole }) => {
                                     <span className="text-2xl font-black text-zinc-900">₹{displayAmount?.toFixed(2)}</span>
                                 </div>
                             </div>
-                            {booking.paymentStatus === 'paid' && (
-                                <span className="flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-md border border-emerald-200">
-                                    <CheckCircle2 className="w-4 h-4" /> Paid
-                                </span>
-                            )}
                         </div>
                     </div>
                 </div>

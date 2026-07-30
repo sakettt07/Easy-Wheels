@@ -7,11 +7,12 @@ import { useRouter } from 'next/navigation';
 import axios from 'axios'
 import {
     Bike, FileText, CreditCard, ClipboardCheck,
-    Video, Tag, Star, Zap, BookOpen, ChevronRight, CheckCircle2,
+    Video, Tag, Star, Zap, ChevronRight, CheckCircle2,
     Clock, Lock, XCircle, AlertTriangle, RefreshCw,
     ExternalLink, Copy, Check, Wifi, WifiOff
 } from 'lucide-react';
 import PricingModal from './Pricingmodal';
+import ProfessionalRiderDashboard from './ProfessionalRiderDashboard';
 
 type Step = {
     id: number;
@@ -309,6 +310,10 @@ const RiderDashboard = () => {
 
     const isLive = riderStatus === 'approved' && pricingStatus === 'approved' && completedSteps >= 7
 
+    if (isLive) {
+        return <ProfessionalRiderDashboard />;
+    }
+
     return (
         <div className='min-h-screen bg-[#f5f5f3] px-4 pt-28 pb-20'>
             <div className='fixed inset-0 pointer-events-none opacity-[0.025]'
@@ -368,28 +373,7 @@ const RiderDashboard = () => {
                     </div>
                 </motion.div>
 
-                {/* Live booking card */}
-                {isLive && (
-                    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.28, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
-                        className='bg-emerald-50 border border-emerald-200 rounded-3xl p-5 shadow-[0_8px_32px_rgba(16,185,129,0.12)] overflow-hidden'>
-                        <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4'>
-                            <div className='flex items-start gap-4'>
-                                <div className='w-12 h-12 rounded-3xl bg-white/80 text-emerald-700 flex items-center justify-center shadow-sm'>
-                                    <Zap size={22} />
-                                </div>
-                                <div>
-                                    <p className='text-sm font-black text-emerald-900'>You are live</p>
-                                    <p className='text-xs text-emerald-700 mt-1'>Your vehicle is ready to accept bookings. Customers can now book your ride immediately.</p>
-                                </div>
-                            </div>
-                            <button
-                                onClick={() => router.push('/bookings')}
-                                className='inline-flex items-center gap-2 rounded-2xl bg-emerald-900 px-4 py-3 text-sm font-black text-white transition hover:bg-emerald-800'>
-                                <BookOpen size={16} /> Go to bookings
-                            </button>
-                        </div>
-                    </motion.div>
-                )}
+                {/* Live booking card (Moved to ProfessionalRiderDashboard) */}
 
                 {/* Horizontal track */}
                 <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.28, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}

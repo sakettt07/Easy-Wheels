@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
         const booking = await Booking.find({
             rider: user._id,
             bookingStatus: {
-                $in: ["confirmed", "started", "completed"]
+                $in: ["confirmed", "started"]
             }
         }).populate("user").populate("vehicle").populate("rider");
         return Response.json({

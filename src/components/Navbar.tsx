@@ -21,6 +21,7 @@ const Navbar = () => {
     const [profileOpen, setProfileOpen] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [pendingCount, setPendingCount] = useState(0);
+    const [hasActiveBooking, setHasActiveBooking] = useState(false);
     const { userData } = useSelector((state: RootState) => state.user);
     const dispatch = useDispatch<AppDispatch>();
     const profileRef = useRef<HTMLDivElement>(null);
@@ -91,6 +92,22 @@ const Navbar = () => {
         if (userData?.role == "rider") {
             fetchPendingCount();
         }
+        
+        const checkActiveBooking = async () => {
+            if (userData?.role === "user") {
+                try {
+                    const { data } = await axios.get('/api/booking/accept');
+                    if (data?.booking && data.booking !== 'idle') {
+                        setHasActiveBooking(true);
+                    } else {
+                        setHasActiveBooking(false);
+                    }
+                } catch (error) {
+                    console.error('Error checking active booking', error);
+                }
+            }
+        };
+        checkActiveBooking();
     }, [userData?.role])
 
     return (
@@ -129,6 +146,12 @@ const Navbar = () => {
                                     {item.name === "Pending Requests" && pendingCount > 0 && (
                                         <span className="absolute -top-3 -right-4 bg-white text-black text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">
                                             {pendingCount}
+                                        </span>
+                                    )}
+                                    {item.name === "Bookings" && hasActiveBooking && (
+                                        <span className="absolute -top-1 -right-3 flex h-2 w-2">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
                                         </span>
                                     )}
                                 </Link>
@@ -289,6 +312,12 @@ const Navbar = () => {
                                                     {item.name === "Pending Requests" && pendingCount > 0 && (
                                                         <span className="absolute -top-2 -right-3 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
                                                             {pendingCount}
+                                                        </span>
+                                                    )}
+                                                    {item.name === "Bookings" && hasActiveBooking && (
+                                                        <span className="absolute -top-1 -right-3 flex h-2 w-2">
+                                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
                                                         </span>
                                                     )}
                                                 </span>

@@ -12,6 +12,8 @@ interface PanelContentProps {
     booking: IBooking;
     mapStatus: "arriving" | "ongoing" | "completed";
     routeInfo?: { distance: number | null, duration: number | null };
+    onDropSuccess?: () => void;
+    onPickupSuccess?: () => void;
 }
 
 const getStatusMessage = (status: BookingStatus) => {
@@ -23,7 +25,7 @@ const getStatusMessage = (status: BookingStatus) => {
     }
 }
 
-export default function PanelContent({ booking, mapStatus, routeInfo }: PanelContentProps) {
+export default function PanelContent({ booking, mapStatus, routeInfo, onDropSuccess, onPickupSuccess }: PanelContentProps) {
     const [chatOpen, setChatOpen] = useState(false);
 
     const { userData } = useSelector((state: RootState) => state.user)
@@ -150,6 +152,8 @@ export default function PanelContent({ booking, mapStatus, routeInfo }: PanelCon
                             <OTPActionCard 
                                 bookingId={(booking as any)._id} 
                                 actionType={booking.bookingStatus === 'confirmed' ? "pickup" : "drop"} 
+                                onSuccess={onDropSuccess}
+                                onPickupSuccess={onPickupSuccess}
                             />
                         )}
                     </div>

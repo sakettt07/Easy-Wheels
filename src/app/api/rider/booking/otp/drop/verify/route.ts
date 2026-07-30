@@ -18,7 +18,12 @@ export async function POST(req: NextRequest) {
                 message: "Invalid OTP"
             }, { status: 400 })
         }
+        if (booking.paymentStatus === "cash") {
+            booking.adminCommission = booking.fare * 0.10;
+            booking.riderAmount = booking.fare - booking.adminCommission;
+        }
         booking.bookingStatus = "completed"
+        booking.paymentStatus = "paid"
         booking.dropOTP = ""
         booking.dropOTPExpire = undefined
         await booking.save()

@@ -9,9 +9,11 @@ import { useRouter } from 'next/navigation'
 interface OTPActionCardProps {
     bookingId: string;
     actionType: "pickup" | "drop";
+    onSuccess?: () => void;
+    onPickupSuccess?: () => void;
 }
 
-export default function OTPActionCard({ bookingId, actionType }: OTPActionCardProps) {
+export default function OTPActionCard({ bookingId, actionType, onSuccess, onPickupSuccess }: OTPActionCardProps) {
     const router = useRouter()
     const [step, setStep] = useState<"action" | "sending" | "verify">("action")
     const [otp, setOtp] = useState("")
@@ -53,9 +55,9 @@ export default function OTPActionCard({ bookingId, actionType }: OTPActionCardPr
             await axios.post(endpoint, { bookingId, otp })
 
             if (actionType === "pickup") {
-                window.location.reload()
+                if (onPickupSuccess) onPickupSuccess()
             } else {
-                router.push("/rider/bookings")
+                if (onSuccess) onSuccess()
             }
         } catch (err: any) {
             setError(err?.response?.data?.message || "Invalid OTP")

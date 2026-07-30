@@ -6,8 +6,9 @@ import { motion } from "motion/react";
 import { BookingStatus, IBooking } from "@/models/booking.model";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { getSocket } from "@/lib/socket";
+import { Loader2 } from "lucide-react";
 
 const MAP_STATUS: Record<BookingStatus, "arriving" | "ongoing" | "completed"> = {
     idle: "arriving",
@@ -23,6 +24,7 @@ const MAP_STATUS: Record<BookingStatus, "arriving" | "ongoing" | "completed"> = 
 
 export default function Page() {
     const params = useParams();
+    const router = useRouter();
     const bookingId = params?.id as string;
 
     const [booking, setBooking] = useState<IBooking | null>(null);
@@ -54,8 +56,17 @@ export default function Page() {
         }
     }
     useEffect(() => {
+        if (!bookingId) return;
         fetchActiveBooking();
+        const interval = setInterval(fetchActiveBooking, 5000);
+        return () => clearInterval(interval);
     }, [bookingId])
+
+    useEffect(() => {
+        if (booking?.bookingStatus === 'completed') {
+            router.push('/user/bookings');
+        }
+    }, [booking?.bookingStatus, router])
     useEffect(() => {
         const socket = getSocket();
         socket.emit("join-ride", bookingId);
@@ -70,6 +81,14 @@ export default function Page() {
     }, [bookingId])
 
     const [isExpanded, setIsExpanded] = useState(false);
+
+    if (booking?.bookingStatus === 'completed') {
+        return (
+            <div className="h-screen w-full flex items-center justify-center bg-zinc-950">
+                <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+            </div>
+        )
+    }
 
     return (
         <div className="relative h-screen w-full flex flex-col md:flex-row overflow-hidden bg-zinc-950">

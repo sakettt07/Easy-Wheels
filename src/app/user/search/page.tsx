@@ -65,6 +65,21 @@ const SearchPage = () => {
   // Booking states
   const [bookingVehicle, setBookingVehicle] = useState<NearbyVehicle | null>(null)
   const [bookingStatus, setBookingStatus] = useState<'idle' | 'requesting' | 'confirmed'>('idle')
+  const [hasActiveBooking, setHasActiveBooking] = useState(false)
+
+  useEffect(() => {
+    const checkActiveBooking = async () => {
+      try {
+        const { data } = await axios.get('/api/booking/accept')
+        if (data?.booking && data.booking !== 'idle') {
+          setHasActiveBooking(true)
+        }
+      } catch (error) {
+        console.error('Error checking active booking', error)
+      }
+    }
+    checkActiveBooking()
+  }, [])
 
   useEffect(() => {
     setPickupLocation({ label: pickup, lat: pickupLat, lng: pickupLng })
@@ -120,6 +135,10 @@ const SearchPage = () => {
 
   const handleConfirmBook = () => {
     if (!bookingVehicle) return
+    if (hasActiveBooking) {
+      router.push('/user/bookings');
+      return;
+    }
     const fare = Math.max(
       Math.round((bookingVehicle.baseFare ?? 0) + (Number(routeDistance) || 0) * (bookingVehicle.pricePerKM ?? 0)),
       bookingVehicle.baseFare ?? 0
@@ -173,6 +192,22 @@ const SearchPage = () => {
             </div>
           </div>
         </div>
+
+        {hasActiveBooking && (
+          <div className="mx-6 mt-6 p-4 bg-red-50 text-red-600 rounded-xl flex flex-col gap-2 shadow-sm border border-red-100 shrink-0">
+            <p className="text-sm font-bold flex items-center gap-2">
+              <span className="flex h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+              Active Ride in Progress
+            </p>
+            <p className="text-xs text-red-500/80 leading-relaxed font-medium">Please complete or cancel your current booking before starting a new one.</p>
+            <button 
+              onClick={() => router.push('/user/bookings')} 
+              className="mt-1 bg-red-600 text-white px-4 py-2 rounded-lg text-xs font-bold self-start hover:bg-red-700 transition-colors shadow-sm"
+            >
+              View Active Booking
+            </button>
+          </div>
+        )}
 
         {/* Timeline Route & Badges */}
         <div className='p-6 border-b border-zinc-100/80 space-y-5 shrink-0'>
@@ -393,9 +428,10 @@ const SearchPage = () => {
                     <button
                       type='button'
                       onClick={handleConfirmBook}
-                      className='rounded-xl bg-zinc-950 py-3 text-xs font-bold text-white shadow-md transition hover:bg-zinc-800 active:scale-95 cursor-pointer'
+                      disabled={hasActiveBooking}
+                      className={`rounded-xl py-3 text-xs font-bold shadow-md transition cursor-pointer ${hasActiveBooking ? 'bg-zinc-300 text-zinc-500 cursor-not-allowed' : 'bg-zinc-950 text-white hover:bg-zinc-800 active:scale-95'}`}
                     >
-                      Confirm Ride
+                      {hasActiveBooking ? 'Cannot Book' : 'Confirm Ride'}
                     </button>
                   </div>
                 </div>

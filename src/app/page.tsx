@@ -18,8 +18,6 @@ export default async function Home() {
       {user && <GeoUpdater userId={user._id.toString()} />}
       {user?.role === "rider" ?
         <>
-          <Navbar />
-
           <RiderDashboard />
         </>
         : (user?.role === "admin" ? <AdminDashboard /> :

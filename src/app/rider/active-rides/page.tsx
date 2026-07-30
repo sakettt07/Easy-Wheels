@@ -7,6 +7,9 @@ import { BookingStatus, IBooking } from "@/models/booking.model";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { getSocket } from "@/lib/socket";
+import CompletedScreen from "@/components/CompletedScreen";
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 
 const MAP_STATUS: Record<BookingStatus, "arriving" | "ongoing" | "completed"> = {
     idle: "arriving",
@@ -21,13 +24,15 @@ const MAP_STATUS: Record<BookingStatus, "arriving" | "ongoing" | "completed"> = 
 }
 
 function page() {
+    const router = useRouter();
     const [booking, setBooking] = useState<IBooking | null>(null);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [initialized, setInitialized] = useState(false);
     const [driverPos, setDriverPosition] = useState<[number, number] | null>(null);
     const [pickupPosition, setPickupPosition] = useState<[number, number] | null>(null)
     const [dropPosition, setDropPosition] = useState<[number, number] | null>(null)
 
-    const [routeInfo, setRouteInfo] = useState<{distance: number | null, duration: number | null}>({ distance: null, duration: null });
+    const [routeInfo, setRouteInfo] = useState<{ distance: number | null, duration: number | null }>({ distance: null, duration: null });
 
     const fetchActiveBooking = async () => {
         try {
@@ -44,6 +49,7 @@ function page() {
 
         } finally {
             setLoading(false);
+            setInitialized(true);
         }
     }
     useEffect(() => {
@@ -81,6 +87,24 @@ function page() {
 
     const [isExpanded, setIsExpanded] = useState(false);
 
+    useEffect(() => {
+        if (initialized && !loading && !booking) {
+            router.push('/');
+        }
+    }, [initialized, loading, booking, router]);
+
+    if (!initialized || loading) {
+        return (
+            <div className="h-screen w-full flex items-center justify-center bg-zinc-950">
+                <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+            </div>
+        )
+    }
+
+    if (booking?.bookingStatus === 'completed') {
+        return <CompletedScreen booking={booking} />
+    }
+
     return (
         <div className="relative h-screen w-full flex flex-col md:flex-row overflow-hidden bg-zinc-950">
             {/* Map Area - Full height on mobile so drawer overlays it */}
@@ -103,6 +127,8 @@ function page() {
                             booking={booking}
                             mapStatus={MAP_STATUS[booking.bookingStatus]}
                             routeInfo={routeInfo}
+                            onDropSuccess={() => setBooking(prev => prev ? { ...prev, bookingStatus: 'completed' } as any : prev)}
+                            onPickupSuccess={() => fetchActiveBooking()}
                         />
                     </div>
 
@@ -127,6 +153,8 @@ function page() {
                                 booking={booking}
                                 mapStatus={MAP_STATUS[booking.bookingStatus]}
                                 routeInfo={routeInfo}
+                                onDropSuccess={() => setBooking(prev => prev ? { ...prev, bookingStatus: 'completed' } as any : prev)}
+                                onPickupSuccess={() => fetchActiveBooking()}
                             />
                         </div>
                     </motion.div>
