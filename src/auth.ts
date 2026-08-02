@@ -6,12 +6,13 @@ import bcrypt from "bcryptjs";
 import Google from "next-auth/providers/google";
 import { authConfig } from "./auth.config";
 
-class UserNotFoundError extends CredentialsSignin {
-    code = "user_not_found"
-}
 
-class IncorrectPasswordError extends CredentialsSignin {
-    code = "incorrect_password"
+class CustomAuthError extends CredentialsSignin {
+    code: string;
+    constructor(code: string) {
+        super();
+        this.code = code;
+    }
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -24,18 +25,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             },
             async authorize(credentials, request) {
                 if (!credentials.email || !credentials.password) {
-                    throw new CredentialsSignin("Missing credentials");
+                    throw new CustomAuthError("Missing credentials");
                 }
                 const email = credentials.email;
                 const password = credentials.password as string;
                 await connectDb();
                 const user = await User.findOne({ email });
                 if (!user) {
-                    throw new UserNotFoundError();
+                    throw new CustomAuthError("user_not_found");
                 }
                 const isMatched = await bcrypt.compare(password, user.password);
                 if (!isMatched) {
-                    throw new IncorrectPasswordError();
+                    throw new CustomAuthError("incorrect_password");
                 }
                 return {
                     id: user._id,

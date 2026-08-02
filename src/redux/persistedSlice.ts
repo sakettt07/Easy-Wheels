@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 // Redux persistence middleware for client-side state persistence
 import { Middleware } from '@reduxjs/toolkit'
 import { RootState } from './store'
@@ -7,14 +8,14 @@ const STORAGE_KEY = 'redux_state'
 /**
  * Load persisted state from localStorage
  */
-export const loadPersistedState = (): Partial<RootState> | undefined => {
+export const loadPersistedState: any = (): Partial<RootState> | undefined => {
     try {
         if (typeof window === 'undefined') return undefined
         const serialized = localStorage.getItem(STORAGE_KEY)
         if (serialized === null) return undefined
         return JSON.parse(serialized)
-    } catch (error) {
-        console.error('Failed to load persisted state:', error)
+    } catch (error: any) {
+        logger.error('Failed to load persisted state:', error)
         return undefined
     }
 }
@@ -33,8 +34,8 @@ export const persistenceMiddleware: Middleware<{}, RootState> =
                 user: state.user,
             })
             localStorage.setItem(STORAGE_KEY, serialized)
-        } catch (error) {
-            console.error('Failed to persist state:', error)
+        } catch (error: any) {
+            logger.error('Failed to persist state:', error)
         }
 
         return result
@@ -48,7 +49,7 @@ export const clearPersistedState = () => {
         if (typeof window !== 'undefined') {
             localStorage.removeItem(STORAGE_KEY)
         }
-    } catch (error) {
-        console.error('Failed to clear persisted state:', error)
+    } catch (error: any) {
+        logger.error('Failed to clear persisted state:', error)
     }
 }

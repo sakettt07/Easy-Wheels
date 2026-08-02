@@ -1,4 +1,5 @@
 'use client'
+import { logger } from "@/lib/logger";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import BookingCard from "@/components/BookingCard";
@@ -29,8 +30,8 @@ export default function UserBookingsPage() {
             if (data?.bookings) {
                 setBookings(data.bookings);
             }
-        } catch (error) {
-            console.error("Error fetching user bookings:", error);
+        } catch (error: any) {
+            logger.error("Error fetching user bookings:", error);
         } finally {
             setLoading(false);
         }
@@ -47,7 +48,7 @@ export default function UserBookingsPage() {
     });
 
     return (
-        <div 
+        <div
             className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 font-sans relative bg-neutral-50"
             style={{
                 backgroundImage: 'linear-gradient(to right, rgba(163, 163, 163, 0.15) 1px, transparent 1px), linear-gradient(to bottom, rgba(163, 163, 163, 0.15) 1px, transparent 1px)',
@@ -78,11 +79,10 @@ export default function UserBookingsPage() {
                             <button
                                 key={filter.id}
                                 onClick={() => setActiveFilter(filter.id)}
-                                className={`relative px-5 py-2.5 rounded-full text-sm font-semibold transition-colors ${
-                                    activeFilter === filter.id 
-                                        ? 'text-white' 
-                                        : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100'
-                                }`}
+                                className={`relative px-5 py-2.5 rounded-full text-sm font-semibold transition-colors ${activeFilter === filter.id
+                                    ? 'text-white'
+                                    : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100'
+                                    }`}
                             >
                                 {activeFilter === filter.id && (
                                     <motion.div
@@ -106,7 +106,7 @@ export default function UserBookingsPage() {
                 ) : (
                     <AnimatePresence mode="popLayout">
                         {filteredBookings.length > 0 ? (
-                            <motion.div 
+                            <motion.div
                                 layout
                                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6"
                             >

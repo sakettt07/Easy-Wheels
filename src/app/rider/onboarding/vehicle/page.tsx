@@ -1,4 +1,5 @@
 'use client'
+import { logger } from "@/lib/logger";
 import React, { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from "motion/react";
 import { useRouter } from 'next/navigation';
@@ -86,7 +87,7 @@ export default function VehiclePage() {
                 setVehicleNumber(data.vehicleNumber)
                 setVehicleModel(data.vehicleModel)
             } catch (error: any) {
-                console.log(error);
+                logger.info(error);
             }
         }
         handleGetVehicle();

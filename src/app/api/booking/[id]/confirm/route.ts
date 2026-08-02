@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import connectDb from "@/lib/db";
 import Booking from "@/models/booking.model";
 import { NextRequest } from "next/server"
@@ -24,8 +25,8 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
             message: "Booking confirmed successfully"
         }, { status: 200 })
 
-    } catch (error) {
-        console.error("Error confirming booking", error);
+    } catch (error: any) {
+        logger.error("Error confirming booking", error);
         return Response.json({
             message: `Internal server error at confirming booking ${error}`
         }, { status: 500 })

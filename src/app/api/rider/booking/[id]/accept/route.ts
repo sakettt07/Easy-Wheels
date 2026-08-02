@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import connectDb from "@/lib/db";
 import Booking from "@/models/booking.model";
 import axios from "axios";
@@ -31,8 +32,8 @@ export async function GET(reque: NextRequest, context: { params: Promise<{ id: s
             message: "Booking accepted successfully"
         }, { status: 200 })
 
-    } catch (error) {
-        console.error("Error accepting booking", error);
+    } catch (error: any) {
+        logger.error("Error accepting booking", error);
         return Response.json({
             message: `Internal server error at accept booking ${error}`
         }, { status: 500 })

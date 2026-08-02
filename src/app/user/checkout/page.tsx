@@ -1,4 +1,5 @@
 'use client'
+import { logger } from "@/lib/logger";
 import React, { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { MapPin, Navigation, Calendar, ShieldCheck, ChevronRight, Car, Phone, ArrowLeft, Loader2, Banknote, CreditCard, CheckCircle2, XCircle } from "lucide-react";
@@ -52,8 +53,8 @@ const CheckoutContent = () => {
                 setBookingStatus(data.booking.bookingStatus);
                 setBookingId(data.booking._id);
             }
-        } catch (error) {
-            console.error("Error fetching accepted booking:", error);
+        } catch (error: any) {
+            logger.error("Error fetching accepted booking:", error);
         }
     }
 
@@ -99,7 +100,7 @@ const CheckoutContent = () => {
                 setBookingStatus('requested');
             }
         } catch (err: any) {
-            console.error("Booking error:", err);
+            logger.error("Booking error:", err);
             setError(err.response?.data?.message || "Failed to create booking. Please try again.");
         } finally {
             setIsBooking(false);
@@ -111,9 +112,9 @@ const CheckoutContent = () => {
     const handleCancel = async (id: string) => {
         try {
             const { data } = await axios.get(`/api/booking/${id}/cancel`)
-            console.log(data);
+            logger.info(data);
         } catch (error) {
-            console.log(error);
+            logger.info(error);
         }
     };
 
@@ -443,12 +444,12 @@ const CheckoutContent = () => {
             if (paymentMethod === 'cash') {
                 // Cash method API
                 const { data } = await axios.get(`/api/booking/${bookingId}/confirm`);
-                console.log("Cash booking confirmed:", data);
+                logger.info("Cash booking confirmed:", data);
 
                 setPaymentStatus('success');
                 setPaymentMessage("Cash booking successfully confirmed!");
                 setTimeout(() => {
-                    router.push("/bookings");
+                    router.push("/user/bookings");
                 }, 2000);
                 return;
             }
@@ -463,14 +464,17 @@ const CheckoutContent = () => {
 
             //get order details from the backend
             const { data } = await axios.post("/api/payment/create", { bookingId });
-            console.log(data);
+            logger.info(data);
             const paymentObject = new (window as any).Razorpay({
                 key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
                 amount: data.orderDetails.amount,
                 currency: data.orderDetails.currency,
                 name: "EasyWheels",
                 description: "Complete your ride booking",
-                image: "/razlogo.png",
+                image: "https://res.cloudinary.com/dsj8jbfft/image/upload/v1785588069/razlogo_aaybvi.png",
+                theme: {
+                    "color": "#0000"
+                },
                 order_id: data.orderDetails.id,
                 handler: async function (response: any) {
                     try {
@@ -487,11 +491,11 @@ const CheckoutContent = () => {
                             return;
                         }
 
-                        console.log("Payment verified:", verifyData);
+                        logger.info("Payment verified:", verifyData);
                         setPaymentStatus('success');
                         setPaymentMessage("Online payment successfully verified!");
                         setTimeout(() => {
-                            router.push("/bookings");
+                            router.push("/user/bookings");
                         }, 2000);
                     } catch (err: any) {
                         setPaymentStatus('error');
@@ -514,7 +518,7 @@ const CheckoutContent = () => {
 
         }
         catch (err: any) {
-            console.error(err);
+            logger.error(err);
             setPaymentStatus('error');
             setPaymentMessage(err.response?.data?.message || "Something went wrong. Please try again");
         }

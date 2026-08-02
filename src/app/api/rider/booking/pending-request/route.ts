@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { auth } from "@/auth";
 import connectDb from "@/lib/db";
 import Booking from "@/models/booking.model";
@@ -27,8 +28,8 @@ export async function GET(req: NextRequest) {
             message: "success",
             count: count
         }, { status: 200 })
-    } catch (error) {
-        console.error("error in pending request", error);
+    } catch (error: any) {
+        logger.error("error in pending request", error);
         return Response.json({
             message: "Internal server error"
         }, { status: 500 })

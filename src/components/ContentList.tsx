@@ -23,7 +23,7 @@ export const TYPE_CONFIG = {
     kyc: {
         emptyText: 'No pending KYC reviews',
         emptyIcon: Shield,
-        actionRoute: (id: string) => `/rider/video-kyc/${id}`,
+        actionRoute: (id: string) => `/video-kyc/${id}`,
     },
     vehicle: {
         emptyText: 'No pending vehicle reviews',

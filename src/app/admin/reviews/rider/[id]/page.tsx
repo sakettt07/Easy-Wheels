@@ -1,4 +1,5 @@
 'use client'
+import { logger } from "@/lib/logger";
 import AnimatedCard from '@/components/AnimatedCard'
 import DocPreview from '@/components/DocPreview'
 import axios from 'axios'
@@ -10,6 +11,7 @@ import {
 import { useRouter, useParams } from 'next/navigation'
 import React, { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
+import { createPortal } from 'react-dom'
 
 // ── Field row ────────────────────────────────────────────────
 const Field = ({ label, value, icon }: { label: string; value?: string | null; icon?: React.ReactNode }) => (
@@ -42,75 +44,82 @@ const StatusBadge = ({ status }: { status?: string }) => {
     )
 }
 
-// ── Approve confirm modal ─────────────────────────────────────
 const ApproveModal = ({ open, onClose, onConfirm, loading }: {
     open: boolean
     onClose: () => void
     onConfirm: () => void
     loading: boolean
-}) => (
-    <AnimatePresence>
-        {open && (
-            <motion.div
-                className='fixed inset-0 z-[999] flex items-center justify-center p-4'
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            >
+}) => {
+    const [mounted, setMounted] = useState(false)
+    useEffect(() => setMounted(true), [])
+
+    if (!mounted) return null;
+
+    return createPortal(
+        <AnimatePresence>
+            {open && (
                 <motion.div
-                    className='absolute inset-0 bg-black/50 backdrop-blur-sm'
-                    onClick={onClose}
-                />
-                <motion.div
-                    initial={{ scale: 0.88, opacity: 0, y: 16 }}
-                    animate={{ scale: 1, opacity: 1, y: 0 }}
-                    exit={{ scale: 0.88, opacity: 0, y: 16 }}
-                    transition={{ type: 'spring', damping: 26, stiffness: 300 }}
-                    className='relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-7 z-10'
+                    className='fixed inset-0 z-[999] flex items-center justify-center p-4'
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 >
-                    {/* Icon */}
-                    <div className='w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center mb-5'>
-                        <CheckCircle2 size={22} className='text-emerald-600' strokeWidth={1.8} />
-                    </div>
+                    <motion.div
+                        className='absolute inset-0 bg-black/50 backdrop-blur-sm'
+                        onClick={onClose}
+                    />
+                    <motion.div
+                        initial={{ scale: 0.88, opacity: 0, y: 16 }}
+                        animate={{ scale: 1, opacity: 1, y: 0 }}
+                        exit={{ scale: 0.88, opacity: 0, y: 16 }}
+                        transition={{ type: 'spring', damping: 26, stiffness: 300 }}
+                        className='relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-7 z-10'
+                    >
+                        {/* Icon */}
+                        <div className='w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center mb-5'>
+                            <CheckCircle2 size={22} className='text-emerald-600' strokeWidth={1.8} />
+                        </div>
 
-                    <h2 className='text-lg font-black text-zinc-900 tracking-tight'>Approve this rider?</h2>
-                    <p className='text-sm text-zinc-400 mt-2 leading-relaxed'>
-                        All documents have been verified. Approving will activate this rider's account and allow them to start accepting rides.
-                    </p>
+                        <h2 className='text-lg font-black text-zinc-900 tracking-tight'>Approve this rider?</h2>
+                        <p className='text-sm text-zinc-400 mt-2 leading-relaxed'>
+                            All documents have been verified. Approving will activate this rider's account and allow them to start accepting rides.
+                        </p>
 
-                    {/* Checklist summary */}
-                    <div className='mt-5 p-4 rounded-xl bg-emerald-50 border border-emerald-100 space-y-2'>
-                        {['Documents verified', 'Vehicle details confirmed', 'Bank details on file'].map(item => (
-                            <div key={item} className='flex items-center gap-2'>
-                                <CheckCircle2 size={12} className='text-emerald-600 shrink-0' />
-                                <span className='text-xs font-semibold text-emerald-700'>{item}</span>
-                            </div>
-                        ))}
-                    </div>
+                        {/* Checklist summary */}
+                        <div className='mt-5 p-4 rounded-xl bg-emerald-50 border border-emerald-100 space-y-2'>
+                            {['Documents verified', 'Vehicle details confirmed', 'Bank details on file'].map(item => (
+                                <div key={item} className='flex items-center gap-2'>
+                                    <CheckCircle2 size={12} className='text-emerald-600 shrink-0' />
+                                    <span className='text-xs font-semibold text-emerald-700'>{item}</span>
+                                </div>
+                            ))}
+                        </div>
 
-                    <div className='flex items-center gap-3 mt-6'>
-                        <button
-                            onClick={onClose}
-                            className='flex-1 py-3 rounded-xl border border-zinc-200 text-sm font-bold text-zinc-600 hover:bg-zinc-50 transition-all'
-                        >
-                            Cancel
-                        </button>
-                        <motion.button
-                            whileTap={{ scale: 0.97 }}
-                            onClick={onConfirm}
-                            disabled={loading}
-                            className='flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-60'
-                        >
-                            {loading
-                                ? <span className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin' />
-                                : <CheckCircle2 size={14} />
-                            }
-                            Yes, Approve
-                        </motion.button>
-                    </div>
+                        <div className='flex items-center gap-3 mt-6'>
+                            <button
+                                onClick={onClose}
+                                className='flex-1 py-3 rounded-xl border border-zinc-200 text-sm font-bold text-zinc-600 hover:bg-zinc-50 transition-all'
+                            >
+                                Cancel
+                            </button>
+                            <motion.button
+                                whileTap={{ scale: 0.97 }}
+                                onClick={onConfirm}
+                                disabled={loading}
+                                className='flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-60'
+                            >
+                                {loading
+                                    ? <span className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin' />
+                                    : <CheckCircle2 size={14} />
+                                }
+                                Yes, Approve
+                            </motion.button>
+                        </div>
+                    </motion.div>
                 </motion.div>
-            </motion.div>
-        )}
-    </AnimatePresence>
-)
+            )}
+        </AnimatePresence>,
+        document.body
+    )
+}
 
 // ── Reject modal with reason textarea ────────────────────────
 const RejectModal = ({ open, onClose, onConfirm, loading }: {
@@ -121,6 +130,9 @@ const RejectModal = ({ open, onClose, onConfirm, loading }: {
 }) => {
     const [reason, setReason] = useState('')
     const textareaRef = useRef<HTMLTextAreaElement>(null)
+    const [mounted, setMounted] = useState(false)
+    
+    useEffect(() => setMounted(true), [])
 
     // Focus textarea when modal opens
     useEffect(() => {
@@ -130,9 +142,11 @@ const RejectModal = ({ open, onClose, onConfirm, loading }: {
         }
     }, [open])
 
+    if (!mounted) return null;
+
     const canSubmit = reason.trim().length >= 10
 
-    return (
+    return createPortal(
         <AnimatePresence>
             {open && (
                 <motion.div
@@ -216,7 +230,8 @@ const RejectModal = ({ open, onClose, onConfirm, loading }: {
                     </motion.div>
                 </motion.div>
             )}
-        </AnimatePresence>
+        </AnimatePresence>,
+        document.body
     )
 }
 
@@ -336,7 +351,7 @@ const RiderReviewPage = () => {
                 setDocs(data.documents)
                 setBank(data.bank)
             } catch (err) {
-                console.error(err)
+                logger.error(err)
             } finally {
                 setLoading(false)
             }

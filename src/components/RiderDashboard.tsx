@@ -1,4 +1,5 @@
 'use client'
+import { logger } from "@/lib/logger";
 import { RootState } from '@/redux/store';
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -276,7 +277,7 @@ const RiderDashboard = () => {
                 setPricingRejectionReason(null)
                 return
             }
-            console.error('Error fetching pricing state:', error)
+            logger.error('Error fetching pricing state:', error)
         }
     }
 

@@ -1,6 +1,8 @@
 'use client'
+import { logger } from "@/lib/logger";
 import React, { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
+import { createPortal } from 'react-dom'
 import { useParams, useRouter } from 'next/navigation'
 import axios from 'axios'
 import {
@@ -43,50 +45,58 @@ const StatusBadge = ({ status }: { status?: string }) => {
 // ── Approve modal ─────────────────────────────────────────────
 const ApproveModal = ({ open, onClose, onConfirm, loading }: {
     open: boolean; onClose: () => void; onConfirm: () => void; loading: boolean
-}) => (
-    <AnimatePresence>
-        {open && (
-            <>
-                <motion.div className='fixed inset-0 z-1000 bg-black/50 backdrop-blur-sm'
-                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                    onClick={onClose} />
-                <div className='fixed inset-0 z-1001 flex items-center justify-center p-4 pointer-events-none'>
-                    <motion.div
-                        initial={{ scale: 0.88, opacity: 0, y: 16 }}
-                        animate={{ scale: 1, opacity: 1, y: 0 }}
-                        exit={{ scale: 0.88, opacity: 0, y: 16 }}
-                        transition={{ type: 'spring', damping: 26, stiffness: 300 }}
-                        className='bg-white rounded-2xl shadow-2xl w-full max-w-md p-7 pointer-events-auto'
-                    >
-                        <div className='w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center mb-5'>
-                            <CheckCircle2 size={22} className='text-emerald-600' strokeWidth={1.8} />
-                        </div>
-                        <h2 className='text-lg font-black text-zinc-900 tracking-tight'>Approve Vehicle Pricing?</h2>
-                        <p className='text-sm text-zinc-400 mt-2 leading-relaxed'>
-                            Approving will confirm the vehicle's pricing and image. The rider will be able to proceed to the next step.
-                        </p>
-                        <div className='mt-5 p-4 rounded-xl bg-emerald-50 border border-emerald-100 space-y-2'>
-                            {['Vehicle image verified', 'Fare rates look acceptable', 'Rider profile is complete'].map(item => (
-                                <div key={item} className='flex items-center gap-2'>
-                                    <CheckCircle2 size={12} className='text-emerald-600 shrink-0' />
-                                    <span className='text-xs font-semibold text-emerald-700'>{item}</span>
-                                </div>
-                            ))}
-                        </div>
-                        <div className='flex items-center gap-3 mt-6'>
-                            <button onClick={onClose} className='flex-1 py-3 rounded-xl border border-zinc-200 text-sm font-bold text-zinc-600 hover:bg-zinc-50 transition-all'>Cancel</button>
-                            <motion.button whileTap={{ scale: 0.97 }} onClick={onConfirm} disabled={loading}
-                                className='flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-60'>
-                                {loading ? <span className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin' /> : <CheckCircle2 size={14} />}
-                                Yes, Approve
-                            </motion.button>
-                        </div>
-                    </motion.div>
-                </div>
-            </>
-        )}
-    </AnimatePresence>
-)
+}) => {
+    const [mounted, setMounted] = useState(false)
+    useEffect(() => setMounted(true), [])
+
+    if (!mounted) return null;
+
+    return createPortal(
+        <AnimatePresence>
+            {open && (
+                <>
+                    <motion.div className='fixed inset-0 z-1000 bg-black/50 backdrop-blur-sm'
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        onClick={onClose} />
+                    <div className='fixed inset-0 z-1001 flex items-center justify-center p-4 pointer-events-none'>
+                        <motion.div
+                            initial={{ scale: 0.88, opacity: 0, y: 16 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.88, opacity: 0, y: 16 }}
+                            transition={{ type: 'spring', damping: 26, stiffness: 300 }}
+                            className='bg-white rounded-2xl shadow-2xl w-full max-w-md p-7 pointer-events-auto'
+                        >
+                            <div className='w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center mb-5'>
+                                <CheckCircle2 size={22} className='text-emerald-600' strokeWidth={1.8} />
+                            </div>
+                            <h2 className='text-lg font-black text-zinc-900 tracking-tight'>Approve Vehicle Pricing?</h2>
+                            <p className='text-sm text-zinc-400 mt-2 leading-relaxed'>
+                                Approving will confirm the vehicle's pricing and image. The rider will be able to proceed to the next step.
+                            </p>
+                            <div className='mt-5 p-4 rounded-xl bg-emerald-50 border border-emerald-100 space-y-2'>
+                                {['Vehicle image verified', 'Fare rates look acceptable', 'Rider profile is complete'].map(item => (
+                                    <div key={item} className='flex items-center gap-2'>
+                                        <CheckCircle2 size={12} className='text-emerald-600 shrink-0' />
+                                        <span className='text-xs font-semibold text-emerald-700'>{item}</span>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className='flex items-center gap-3 mt-6'>
+                                <button onClick={onClose} className='flex-1 py-3 rounded-xl border border-zinc-200 text-sm font-bold text-zinc-600 hover:bg-zinc-50 transition-all'>Cancel</button>
+                                <motion.button whileTap={{ scale: 0.97 }} onClick={onConfirm} disabled={loading}
+                                    className='flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-60'>
+                                    {loading ? <span className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin' /> : <CheckCircle2 size={14} />}
+                                    Yes, Approve
+                                </motion.button>
+                            </div>
+                        </motion.div>
+                    </div>
+                </>
+            )}
+        </AnimatePresence>,
+        document.body
+    )
+}
 
 // ── Reject modal ──────────────────────────────────────────────
 const RejectModal = ({ open, onClose, onConfirm, loading }: {
@@ -94,14 +104,19 @@ const RejectModal = ({ open, onClose, onConfirm, loading }: {
 }) => {
     const [reason, setReason] = useState('')
     const textareaRef = useRef<HTMLTextAreaElement>(null)
+    const [mounted, setMounted] = useState(false)
+    
+    useEffect(() => setMounted(true), [])
 
     useEffect(() => {
         if (open) { setReason(''); setTimeout(() => textareaRef.current?.focus(), 120) }
     }, [open])
 
+    if (!mounted) return null;
+
     const canSubmit = reason.trim().length >= 10
 
-    return (
+    return createPortal(
         <AnimatePresence>
             {open && (
                 <>
@@ -152,7 +167,8 @@ const RejectModal = ({ open, onClose, onConfirm, loading }: {
                     </div>
                 </>
             )}
-        </AnimatePresence>
+        </AnimatePresence>,
+        document.body
     )
 }
 
@@ -237,7 +253,7 @@ export default function VehicleReviewPage() {
                 const { data } = await axios.get(`/api/admin/reviews/vehicle/${id}`)
                 setVehicle(data)
             } catch (err) {
-                console.error(err)
+                logger.error(err)
             } finally {
                 setLoading(false)
             }

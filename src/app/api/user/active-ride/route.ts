@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { auth } from "@/auth";
 import connectDb from "@/lib/db";
 import Booking from "@/models/booking.model";
@@ -24,8 +25,8 @@ export async function POST(req: NextRequest) {
             message: "Fetching active rides successfully",
             booking
         }, { status: 200 })
-    } catch (error) {
-        console.error("Error fetching active rides", error);
+    } catch (error: any) {
+        logger.error("Error fetching active rides", error);
         return Response.json({
             message: `Internal server error at active rides user ${error}`
         }, { status: 500 })

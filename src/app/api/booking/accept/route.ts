@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { auth } from "@/auth";
 import connectDb from "@/lib/db";
 import Booking from "@/models/booking.model";
@@ -33,7 +34,7 @@ export async function GET(req: NextRequest) {
             if (diffInMinutes > 5) {
                 booking.bookingStatus = "expired";
                 await booking.save();
-                
+
                 if (booking.rider) {
                     try {
                         await axios.post(`${process.env.NEXT_PUBLIC_SOCKET_SERVER_URL}/emit`, {
@@ -41,8 +42,8 @@ export async function GET(req: NextRequest) {
                             to: booking.rider.toString(),
                             data: { bookingId: booking._id }
                         });
-                    } catch (err) {
-                        console.error("Socket emit failed on expiration", err);
+                    } catch (err: any) {
+                        logger.error("Socket emit failed on expiration", err);
                     }
                 }
 

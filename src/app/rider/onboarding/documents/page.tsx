@@ -1,4 +1,5 @@
 'use client'
+import { logger } from "@/lib/logger";
 import React, { useEffect, useRef, useState } from 'react'
 import { motion } from "motion/react";
 import { useRouter } from 'next/navigation';
@@ -196,7 +197,7 @@ export default function DocumentsPage() {
             } catch (error: any) {
                 // 404 = no docs yet, that's fine
                 if (error?.response?.status !== 404) {
-                    console.error("Error fetching docs:", error)
+                    logger.error("Error fetching docs:", error)
                 }
             } finally {
                 setFetchingDocs(false)
@@ -231,11 +232,11 @@ export default function DocumentsPage() {
             }
 
             const { data } = await axios.post("/api/rider/onboarding/documents", formData)
-            console.log("Submitted documents:", data)
-            
+            logger.info("Submitted documents:", data)
+
             // Refresh user data to reflect the updated onboarding step
             await refreshUserData()
-            
+
             // Small delay to ensure data is updated before redirect
             setTimeout(() => {
                 router.push('/rider/onboarding/bank')

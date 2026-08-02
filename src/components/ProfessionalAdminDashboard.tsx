@@ -1,13 +1,14 @@
 'use client'
+import { logger } from "@/lib/logger";
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
+import {
     LayoutDashboard, Users, Shield, Car, Settings, TrendingUp, DollarSign, Activity, Zap, Menu, X, BarChart, FileText, LogOut
 } from 'lucide-react';
-import { 
-    AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-    PieChart, Pie, Cell, Legend 
+import {
+    AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+    PieChart, Pie, Cell, Legend
 } from 'recharts';
 import Image from 'next/image';
 import TabButton from './TabButton';
@@ -20,7 +21,7 @@ export default function ProfessionalAdminDashboard() {
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState<any>(null);
     const [chartData, setChartData] = useState<any[]>([]);
-    
+
     // New States
     const [breakdown, setBreakdown] = useState<any[]>([]);
     const [usersList, setUsersList] = useState<any[]>([]);
@@ -39,7 +40,7 @@ export default function ProfessionalAdminDashboard() {
             setRiderReviews(Array.isArray(data.pendingRiderReviews) ? data.pendingRiderReviews : []);
             setVehicleReviews(Array.isArray(data.pendingVehicles) ? data.pendingVehicles : []);
         } catch (error) {
-            console.error(error);
+            logger.error(error);
         }
     };
 
@@ -48,7 +49,7 @@ export default function ProfessionalAdminDashboard() {
             const { data } = await axios.get('/api/admin/video-kyc/pending');
             setKycReviews(Array.isArray(data.rider) ? data.rider : []);
         } catch (error) {
-            console.error(error);
+            logger.error(error);
         }
     };
 
@@ -61,7 +62,7 @@ export default function ProfessionalAdminDashboard() {
             const { data: breakdownData } = await axios.get('/api/admin/earning/breakdown');
             setBreakdown(Array.isArray(breakdownData.breakdown) ? breakdownData.breakdown : []);
         } catch (error) {
-            console.error(error);
+            logger.error(error);
         }
     };
 
@@ -70,7 +71,7 @@ export default function ProfessionalAdminDashboard() {
             const { data } = await axios.get('/api/admin/users');
             setUsersList(Array.isArray(data.users) ? data.users : []);
         } catch (error) {
-            console.error(error);
+            logger.error(error);
         }
     };
 
@@ -79,7 +80,7 @@ export default function ProfessionalAdminDashboard() {
             await axios.put('/api/admin/users', { userId, isBanned: !isBanned });
             handleGetUsers(); // Refresh list
         } catch (error) {
-            console.error(error);
+            logger.error(error);
         }
     };
 
@@ -130,15 +131,14 @@ export default function ProfessionalAdminDashboard() {
                 <nav className="space-y-1.5">
                     <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-3 px-3">Admin Panel</div>
                     {navItems.map((item) => (
-                        <button 
-                            key={item.id} 
+                        <button
+                            key={item.id}
                             onClick={() => {
                                 setActiveMenu(item.id);
                                 setIsMobileMenuOpen(false);
                             }}
-                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                            activeMenu === item.id ? 'bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.3)]' : 'text-zinc-400 hover:text-white hover:bg-white/5'
-                        }`}>
+                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${activeMenu === item.id ? 'bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.3)]' : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                                }`}>
                             <item.icon size={18} />
                             {item.label}
                             {item.id === 'reviews' && (riderReviews.length + kycReviews.length + vehicleReviews.length > 0) && (
@@ -159,7 +159,7 @@ export default function ProfessionalAdminDashboard() {
                         <p className="text-sm font-bold text-white truncate">Administrator</p>
                         <p className="text-[10px] text-zinc-400 truncate">Full Access</p>
                     </div>
-                    <button 
+                    <button
                         onClick={() => signOut({ callbackUrl: '/' })}
                         className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors ml-auto"
                         title="Logout"
@@ -173,7 +173,7 @@ export default function ProfessionalAdminDashboard() {
 
     return (
         <div className="min-h-screen bg-[#0a0a0a] text-zinc-300 font-sans flex relative">
-            
+
             {/* Desktop Sidebar */}
             <aside className="hidden md:flex w-64 border-r border-white/5 flex-col bg-[#0f0f11] shrink-0">
                 <SidebarContent />
@@ -183,12 +183,12 @@ export default function ProfessionalAdminDashboard() {
             <AnimatePresence>
                 {isMobileMenuOpen && (
                     <>
-                        <motion.div 
-                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
-                            className="fixed inset-0 bg-black/60 z-40 md:hidden" 
-                            onClick={toggleMobileMenu} 
+                        <motion.div
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            className="fixed inset-0 bg-black/60 z-40 md:hidden"
+                            onClick={toggleMobileMenu}
                         />
-                        <motion.aside 
+                        <motion.aside
                             initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ type: 'tween', duration: 0.3 }}
                             className="fixed inset-y-0 left-0 w-64 border-r border-white/5 flex-col bg-[#0f0f11] z-50 md:hidden flex"
                         >
@@ -204,7 +204,7 @@ export default function ProfessionalAdminDashboard() {
                 <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-white/5 rounded-full blur-[120px] pointer-events-none" />
 
                 <div className="relative z-10 max-w-7xl mx-auto space-y-6 md:space-y-8">
-                    
+
                     {/* Mobile Header Bar */}
                     <div className="md:hidden flex items-center gap-3 mb-6">
                         <button onClick={toggleMobileMenu} className="p-2 -ml-2 bg-white/5 rounded-xl text-white">
@@ -219,12 +219,12 @@ export default function ProfessionalAdminDashboard() {
                             <h1 className="text-3xl font-black text-white tracking-tight capitalize">{activeMenu.replace('-', ' ')}</h1>
                             <p className="text-sm text-zinc-400 mt-1">Platform monitor & operations control.</p>
                         </div>
-                        <button 
+                        <button
                             onClick={handleRefresh}
                             disabled={loading}
                             className="bg-[#121214] border border-white/10 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-white/5 transition-all flex items-center gap-2"
                         >
-                            <Activity size={16} className={loading ? 'animate-spin text-white' : 'text-white'} /> 
+                            <Activity size={16} className={loading ? 'animate-spin text-white' : 'text-white'} />
                             {loading ? 'Syncing...' : 'Refresh'}
                         </button>
                     </div>
@@ -259,7 +259,7 @@ export default function ProfessionalAdminDashboard() {
                                     <h3 className="text-3xl font-black text-white">{stats?.activeUsers || 0}</h3>
                                     <p className="text-xs text-zinc-500 mt-2 font-medium">Registered customers</p>
                                 </motion.div>
-                                
+
                                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-[#121214] p-6 rounded-3xl border border-white/5">
                                     <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center mb-4">
                                         <TrendingUp size={20} className="text-zinc-300" />
@@ -284,14 +284,14 @@ export default function ProfessionalAdminDashboard() {
                                             <AreaChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                                                 <defs>
                                                     <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                                                        <stop offset="5%" stopColor="#ffffff" stopOpacity={0.3}/>
-                                                        <stop offset="95%" stopColor="#ffffff" stopOpacity={0}/>
+                                                        <stop offset="5%" stopColor="#ffffff" stopOpacity={0.3} />
+                                                        <stop offset="95%" stopColor="#ffffff" stopOpacity={0} />
                                                     </linearGradient>
                                                 </defs>
                                                 <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
                                                 <XAxis dataKey="date" stroke="#52525b" fontSize={12} tickLine={false} axisLine={false} />
                                                 <YAxis stroke="#52525b" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `₹${val}`} />
-                                                <Tooltip 
+                                                <Tooltip
                                                     contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '12px', color: '#fff' }}
                                                     itemStyle={{ color: '#fff', fontWeight: 'bold' }}
                                                 />
@@ -323,7 +323,7 @@ export default function ProfessionalAdminDashboard() {
                                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                                     ))}
                                                 </Pie>
-                                                <Tooltip 
+                                                <Tooltip
                                                     contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '12px', color: '#fff' }}
                                                     itemStyle={{ color: '#fff', fontWeight: 'bold' }}
                                                 />
@@ -349,7 +349,7 @@ export default function ProfessionalAdminDashboard() {
                                     Vehicle Reviews <span className="ml-2 px-2 py-0.5 rounded-full bg-black/20 text-xs">{vehicleReviews.length}</span>
                                 </button>
                             </div>
-                            
+
                             <div className="bg-[#121214] rounded-3xl p-6 border border-white/5">
                                 <AnimatePresence mode='wait'>
                                     <motion.div key={activeTab}
@@ -442,13 +442,12 @@ export default function ProfessionalAdminDashboard() {
                                                 </td>
                                                 <td className="px-4 py-4 text-right">
                                                     {u.role !== 'admin' && (
-                                                        <button 
+                                                        <button
                                                             onClick={() => handleToggleBan(u._id, u.isBanned)}
-                                                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                                                                u.isBanned 
-                                                                ? 'bg-zinc-800 text-white hover:bg-zinc-700' 
-                                                                : 'bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white'
-                                                            }`}
+                                                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${u.isBanned
+                                                                    ? 'bg-zinc-800 text-white hover:bg-zinc-700'
+                                                                    : 'bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white'
+                                                                }`}
                                                         >
                                                             {u.isBanned ? 'Unban' : 'Suspend'}
                                                         </button>

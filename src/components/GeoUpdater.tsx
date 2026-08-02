@@ -1,4 +1,5 @@
 'use client'
+import { logger } from "@/lib/logger";
 import { getSocket } from '@/lib/socket';
 import React, { useEffect, useRef } from 'react'
 
@@ -10,7 +11,7 @@ const GeoUpdater = ({ userId }: { userId: string }) => {
         if (!userId) return;
 
         if (!navigator.geolocation) {
-            console.error('[GeoUpdater] Geolocation not supported');
+            logger.error('[GeoUpdater] Geolocation not supported');
             return;
         }
 
@@ -19,7 +20,7 @@ const GeoUpdater = ({ userId }: { userId: string }) => {
 
         // Wait for socket to be connected before emitting identity
         const connectHandler = () => {
-            console.log('[GeoUpdater] Socket connected, emitting identity:', userId);
+            logger.info({ userId }, '[GeoUpdater] Socket connected, emitting identity:');
             socket.emit("identity", userId);
             startWatchingLocation(socket, userId);
         };
@@ -33,7 +34,7 @@ const GeoUpdater = ({ userId }: { userId: string }) => {
         return () => {
             if (watcherRef.current !== null) {
                 navigator.geolocation.clearWatch(watcherRef.current);
-                console.log('[GeoUpdater] Cleared geolocation watcher');
+                logger.info('[GeoUpdater] Cleared geolocation watcher');
             }
             socket.off('connect', connectHandler);
         };
@@ -51,13 +52,13 @@ const GeoUpdater = ({ userId }: { userId: string }) => {
                     latitude: coords.latitude,
                     longitude: coords.longitude
                 };
-                console.log('[GeoUpdater] Emitting location:', locationData);
-                console.log('[GeoUpdater] Socket connected status:', socket.connected);
+                logger.info(locationData, '[GeoUpdater] Emitting location:');
+                logger.info('[GeoUpdater] Socket connected status:', socket.connected);
                 socket.emit("update-location", locationData);
             },
-            (err) => {
-                console.error('[GeoUpdater] Geolocation error:', err.code, err.message);
-                console.error('[GeoUpdater] Full error object:', err);
+            (err: any) => {
+                logger.error('[GeoUpdater] Geolocation error:', err.code, err.message);
+                logger.error('[GeoUpdater] Full error object:', err);
             },
             {
                 enableHighAccuracy: true,

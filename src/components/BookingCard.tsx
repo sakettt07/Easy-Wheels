@@ -161,7 +161,18 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, viewRole }) => {
                         </div>
                     </div>
                 </div>
-                {/* Active Ride Actions */}
+                {/* Active Ride & Payment Actions */}
+                {booking.bookingStatus === 'awaiting_payment' && viewRole === 'user' && (
+                    <div className="mt-6 pt-6 border-t border-neutral-100">
+                        <button
+                            onClick={() => router.push(`/user/checkout`)}
+                            className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all"
+                        >
+                            Complete Payment
+                        </button>
+                    </div>
+                )}
+
                 {['confirmed', 'started'].includes(booking.bookingStatus) && (
                     <div className="mt-6 pt-6 border-t border-neutral-100">
                         <button

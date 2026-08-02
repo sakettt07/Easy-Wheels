@@ -1,4 +1,5 @@
 'use client'
+import { logger } from "@/lib/logger";
 
 import React, { useEffect, useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
@@ -57,15 +58,15 @@ export default function RideChat({ currentRole, booking }: { currentRole: string
             senderRole: currentRole,
             message: currentText
         });
-        
+
         try {
             await axios.post("/api/chat/send", {
                 bookingId: (booking as any)._id,
                 senderRole: currentRole,
                 message: currentText
             });
-        } catch (error) {
-            console.log("Error sending message", error);
+        } catch (error: any) {
+            logger.info("Error sending message", error);
         }
     }
 
@@ -82,13 +83,13 @@ export default function RideChat({ currentRole, booking }: { currentRole: string
                     setLastMessage(data.chatMessages[data.chatMessages.length - 1].message);
                 }
             }
-        } catch (error) {
-            console.log("Error fetching messages", error);
+        } catch (error: any) {
+            logger.info("Error fetching messages", error);
         }
     }
     useEffect(() => {
         const socket = getSocket();
-        
+
         const handleMessage = ({ bookingId: incomingId, senderRole, message: incomingMessage }: { bookingId: string, senderRole: string, message: string }) => {
             if (incomingId === (booking as any)._id) {
                 setMessages(prev => [...prev, {
@@ -123,8 +124,8 @@ export default function RideChat({ currentRole, booking }: { currentRole: string
             if (data.success && data.data && data.data.suggestions) {
                 setSuggestions(data.data.suggestions);
             }
-        } catch (error) {
-            console.log("Error fetching AI suggestions", error);
+        } catch (error: any) {
+            logger.info("Error fetching AI suggestions", error);
         } finally {
             setLoadingSuggestions(false);
         }

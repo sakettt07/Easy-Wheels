@@ -18,12 +18,16 @@ export async function proxy(req: NextRequest) {
         return NextResponse.next();
     }
     const session = await auth();
+    console.log("[PROXY] Path:", pathname);
+    console.log("[PROXY] Session:", session ? "Exists" : "Null", "Role:", session?.user?.role);
     if (!session) {
+        console.log("[PROXY] Redirecting to / because no session");
         return NextResponse.redirect(new URL("/", req.url));
     }
     const role = session.user?.role
     if (pathname.startsWith("/admin")) {
         if (role != "admin") {
+            console.log("[PROXY] Redirecting to / because role is not admin");
             return NextResponse.redirect(new URL("/", req.url));
         }
     }
@@ -32,8 +36,9 @@ export async function proxy(req: NextRequest) {
             return NextResponse.next();
 
         }
-        if (role != "rider") {
-            return NextResponse.redirect(new URL("/", req.url));
+        if (role != "rider" && role != "admin") {
+            console.log("[PROXY] Redirecting to / because role is not rider or admin", role);
+            // return NextResponse.redirect(new URL("/", req.url));
         }
     }
     if (pathname.startsWith("/api")) {

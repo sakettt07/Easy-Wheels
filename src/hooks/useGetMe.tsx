@@ -1,4 +1,5 @@
 'use client'
+import { logger } from "@/lib/logger";
 
 import { setUserData } from '@/redux/userSlice'
 import axios from 'axios'
@@ -21,7 +22,7 @@ const useGetMe = () => {
         } catch (err: any) {
             const errorMsg = err?.response?.data?.message || 'Error fetching user data'
             setError(errorMsg)
-            console.error('Error fetching user data:', err)
+            logger.error('Error fetching user data:', err)
             throw err
         } finally {
             setLoading(false)

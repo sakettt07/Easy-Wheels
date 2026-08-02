@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { auth } from "@/auth";
 import connectDb from "@/lib/db";
 import User from "@/models/user.model";
@@ -72,7 +73,7 @@ export async function POST(req: NextRequest) {
         );
 
     } catch (error) {
-        console.error("error in", error);
+        logger.error("error in", error);
         return Response.json(
             {
                 message: "Internal server error"

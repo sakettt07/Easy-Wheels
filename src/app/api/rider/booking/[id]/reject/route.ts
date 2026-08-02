@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { NextRequest } from "next/server";
 import connectDb from "@/lib/db";
 import Booking from "@/models/booking.model";
@@ -28,8 +29,8 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
         return Response.json({
             message: "Booking rejected successfully"
         }, { status: 200 })
-    } catch (error) {
-        console.error("Error rejecting booking", error);
+    } catch (error: any) {
+        logger.error("Error rejecting booking", error);
         return Response.json({
             message: `Internal server error at reject booking ${error}`
         }, { status: 500 })

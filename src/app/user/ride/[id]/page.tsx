@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 import dynamic from "next/dynamic";
 const LiveRideMap = dynamic(() => import("@/components/LiveRideMap"), { ssr: false });
 import PanelContent from "@/components/PanelContent";
@@ -33,7 +34,7 @@ export default function Page() {
     const [pickupPosition, setPickupPosition] = useState<[number, number] | null>(null)
     const [dropPosition, setDropPosition] = useState<[number, number] | null>(null)
 
-    const [routeInfo, setRouteInfo] = useState<{distance: number | null, duration: number | null}>({ distance: null, duration: null });
+    const [routeInfo, setRouteInfo] = useState<{ distance: number | null, duration: number | null }>({ distance: null, duration: null });
 
     const fetchActiveBooking = async () => {
         if (!bookingId) return;
@@ -42,7 +43,7 @@ export default function Page() {
             const { data } = await axios.post("/api/user/active-ride", {
                 bookingId: bookingId
             });
-            console.log(data);
+            logger.info(data);
             const activeBooking = Array.isArray(data.booking) ? data.booking[0] : data.booking;
             setBooking(activeBooking);
             if (activeBooking) {

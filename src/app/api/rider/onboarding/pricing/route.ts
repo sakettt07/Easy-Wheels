@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { auth } from "@/auth";
 import uploadOnCloud from "@/lib/cloudinary";
 import connectDb from "@/lib/db";
@@ -67,7 +68,7 @@ export async function POST(req: NextRequest) {
         await rider.save()
         return Response.json({ message: "Pricing Submitted" }, { status: 200 })
     } catch (error) {
-        console.log(error)
+        logger.info(error)
         return Response.json({ message: `Nothing to update ${error}` }, { status: 500 })
     }
 }

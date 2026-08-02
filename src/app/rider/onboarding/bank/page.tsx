@@ -1,4 +1,5 @@
 'use client'
+import { logger } from "@/lib/logger";
 import React, { useEffect, useState } from 'react'
 import { motion } from "motion/react";
 import { useRouter } from 'next/navigation';
@@ -121,7 +122,7 @@ export default function BankPage() {
             } catch (error: any) {
                 // 404 = no bank details yet, perfectly fine — keep empty form
                 if (error?.response?.status !== 404) {
-                    console.error("Error fetching bank details:", error)
+                    logger.error("Error fetching bank details:", error)
                 }
             } finally {
                 setFetchingBank(false)
@@ -176,10 +177,10 @@ export default function BankPage() {
                 contact: form.mobile.trim(),
                 upi: form.upi.trim() || undefined,
             })
-            
+
             // Refresh user data to reflect the completed onboarding
             await refreshUserData()
-            
+
             // Small delay to ensure data is updated before redirect
             setTimeout(() => {
                 router.push('/')

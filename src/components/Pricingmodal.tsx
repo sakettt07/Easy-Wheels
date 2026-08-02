@@ -1,4 +1,5 @@
 'use client'
+import { logger } from "@/lib/logger";
 import React, { useEffect, useState } from "react"
 import { motion, AnimatePresence } from 'motion/react'
 import { IVehicle } from "@/models/vehicle.model"
@@ -64,7 +65,7 @@ const PricingModal = ({ open, onClose, data, onSuccess }: PropsType) => {
             } catch (err: any) {
                 // 404 = no pricing yet, fine — just leave fields empty
                 if (err?.response?.status !== 404) {
-                    console.error("Error fetching pricing:", err)
+                    logger.error("Error fetching pricing:", err)
                 }
             } finally {
                 setFetching(false)

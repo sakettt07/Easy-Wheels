@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 import dynamic from "next/dynamic";
 const LiveRideMap = dynamic(() => import("@/components/LiveRideMap"), { ssr: false });
 import PanelContent from "@/components/PanelContent";
@@ -38,7 +39,7 @@ function page() {
         try {
             setLoading(true);
             const { data } = await axios.get("/api/rider/active-rides");
-            console.log(data);
+            logger.info(data);
             const activeBooking = Array.isArray(data.booking) ? data.booking[0] : data.booking;
             setBooking(activeBooking);
             if (activeBooking) {
@@ -68,7 +69,7 @@ function page() {
                 longitude: lng,
             } as any)
         }, (error) => {
-            console.log(error.message)
+            logger.info(error.message)
         }, { enableHighAccuracy: true, timeout: 5000, maximumAge: 2000 });
         return () => navigator.geolocation.clearWatch(watchId)
     }, [booking?._id])

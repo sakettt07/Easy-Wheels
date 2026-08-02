@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import mongoose from "mongoose"
 
 const mongodbUrl = process.env.MONGODB_URI
@@ -22,7 +23,7 @@ const connectDb = async () => {
         const conn = await cached.promise
         return conn;
     } catch (error) {
-        console.error(error);
+        logger.error(error);
     }
 }
 export default connectDb; 

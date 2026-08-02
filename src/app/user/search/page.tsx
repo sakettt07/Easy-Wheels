@@ -1,5 +1,6 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 'use client'
+import { logger } from "@/lib/logger";
+/* eslint-disable react-hooks/set-state-in-effect */
 
 import React, { useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -74,8 +75,8 @@ const SearchPage = () => {
         if (data?.booking && data.booking !== 'idle') {
           setHasActiveBooking(true)
         }
-      } catch (error) {
-        console.error('Error checking active booking', error)
+      } catch (error: any) {
+        logger.error('Error checking active booking', error)
       }
     }
     checkActiveBooking()
@@ -104,7 +105,7 @@ const SearchPage = () => {
       })
       setNearbyVehicles(Array.isArray(data) ? data : [])
     } catch (error) {
-      console.log(error)
+      logger.info(error)
       setNearbyVehicles([])
     } finally {
       setNearbyVehiclesLoading(false)
@@ -143,18 +144,18 @@ const SearchPage = () => {
       Math.round((bookingVehicle.baseFare ?? 0) + (Number(routeDistance) || 0) * (bookingVehicle.pricePerKM ?? 0)),
       bookingVehicle.baseFare ?? 0
     )
-    
+
     const params = new URLSearchParams()
     params.set('pickup', pickupLocation.label)
     params.set('drop', dropLocation.label)
     params.set('vehicleType', bookingVehicle.type || '')
     params.set('vehicleModel', bookingVehicle.vehicleModel || '')
     if (bookingVehicle.imageUrl) {
-        params.set('vehicleImage', bookingVehicle.imageUrl)
+      params.set('vehicleImage', bookingVehicle.imageUrl)
     }
     params.set('mobile', mobile)
     params.set('fare', fare.toString())
-    
+
     // Additional parameters required for the booking API
     params.set('riderId', bookingVehicle.owner)
     params.set('vehicleId', bookingVehicle._id)
@@ -162,7 +163,7 @@ const SearchPage = () => {
     params.set('pickupLng', pickupLocation.lng.toString())
     params.set('dropLat', dropLocation.lat.toString())
     params.set('dropLng', dropLocation.lng.toString())
-    
+
     router.push(`/user/checkout?${params.toString()}`)
   }
 
@@ -170,7 +171,7 @@ const SearchPage = () => {
     <div className='min-h-screen bg-zinc-50/20 lg:h-screen lg:overflow-hidden flex flex-col lg:flex-row'>
       {/* Left Panel: Booking Details & Nearby Options */}
       <div className='w-full lg:w-[460px] xl:w-[500px] 2xl:w-[540px] flex flex-col bg-white border-r border-zinc-100 shadow-[20px_0_40px_rgba(0,0,0,0.015)] z-10 lg:h-screen lg:overflow-y-auto shrink-0 order-2 lg:order-1'>
-        
+
         {/* Header */}
         <div className='p-6 pb-4 border-b border-zinc-100/80 shrink-0'>
           <div className='flex items-center gap-4'>
@@ -200,8 +201,8 @@ const SearchPage = () => {
               Active Ride in Progress
             </p>
             <p className="text-xs text-red-500/80 leading-relaxed font-medium">Please complete or cancel your current booking before starting a new one.</p>
-            <button 
-              onClick={() => router.push('/user/bookings')} 
+            <button
+              onClick={() => router.push('/user/bookings')}
               className="mt-1 bg-red-600 text-white px-4 py-2 rounded-lg text-xs font-bold self-start hover:bg-red-700 transition-colors shadow-sm"
             >
               View Active Booking

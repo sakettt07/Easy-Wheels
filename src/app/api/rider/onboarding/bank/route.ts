@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import connectDb from "@/lib/db";
 import RiderBank from "@/models/riderBank.model";
 import User from "@/models/user.model";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
     try {
@@ -53,13 +53,13 @@ export async function GET(req: NextRequest) {
         await connectDb();
         const session = await auth();
         if (!session || !session.user?.email) {
-            return Response.json({
+            return NextResponse.json({
                 message: "unauthorized"
             }, { status: 401 })
         }
         const user = await User.findOne({ email: session?.user?.email });
         if (!user) {
-            return Response.json({
+            return NextResponse.json({
                 message: "user not found"
             }, { status: 400 })
         }
@@ -67,13 +67,17 @@ export async function GET(req: NextRequest) {
             owner: user._id
         })
         if (riderBankDetails) {
-            return Response.json(riderBankDetails, { status: 200 })
+            return NextResponse.json(riderBankDetails, { status: 200 })
         }
         else {
-            return null;
+            return NextResponse.json(
+                {
+                    message: "Bank details not found",
+                },
+                { status: 400 })
         }
     } catch (error) {
-        return Response.json({
+        return NextResponse.json({
             message: `Rider bank details fetching error : ${error}`
         }, { status: 500 })
     }

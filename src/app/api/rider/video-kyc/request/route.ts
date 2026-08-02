@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { auth } from "@/auth";
 import connectDb from "@/lib/db";
 import User from "@/models/user.model";
@@ -32,8 +33,8 @@ export async function GET(req: NextRequest) {
             message: "Video kyc request sent successfully"
         }, { status: 200 })
 
-    } catch (error) {
-        console.error("error in", error)
+    } catch (error: any) {
+        logger.error("error in", error)
         return Response.json({
             message: "Internal server error"
         }, { status: 500 })

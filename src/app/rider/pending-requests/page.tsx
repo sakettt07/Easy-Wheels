@@ -1,4 +1,5 @@
 'use client'
+import { logger } from "@/lib/logger";
 
 import axios from "axios";
 import { motion, AnimatePresence } from "motion/react";
@@ -30,8 +31,8 @@ const PendingRequest = () => {
             if (data.bookings) {
                 setBookingRequests(data.bookings);
             }
-        } catch (error) {
-            console.error("Error in fetching booking requests", error);
+        } catch (error: any) {
+            logger.error("Error in fetching booking requests", error);
         } finally {
             setLoading(false);
         }
@@ -43,8 +44,9 @@ const PendingRequest = () => {
             setActionType('accept');
             await axios.get(`/api/rider/booking/${id}/accept`);
             fetchPendingRequest();
-        } catch (error) {
-            console.error("Error accepting booking", error);
+            router.push("/rider/bookings")
+        } catch (error: any) {
+            logger.error("Error accepting booking", error);
         } finally {
             setActionId(null);
             setActionType(null);
@@ -57,8 +59,8 @@ const PendingRequest = () => {
             setActionType('reject');
             await axios.post(`/api/rider/booking/${id}/reject`);
             fetchPendingRequest();
-        } catch (error) {
-            console.error("Error rejecting booking", error);
+        } catch (error: any) {
+            logger.error("Error rejecting booking", error);
         } finally {
             setActionId(null);
             setActionType(null);

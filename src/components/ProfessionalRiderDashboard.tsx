@@ -1,4 +1,5 @@
 'use client'
+import { logger } from "@/lib/logger";
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { AnimatePresence, motion } from 'motion/react';
@@ -32,8 +33,8 @@ export default function ProfessionalRiderDashboard() {
         try {
             const { data } = await axios.get("/api/rider/booking/pending-request");
             setPendingCount(data.count || 0);
-        } catch (error) {
-            console.error("error in fetching pending count", error);
+        } catch (error: any) {
+            logger.error("error in fetching pending count", error);
             setPendingCount(0);
         }
     };
@@ -61,8 +62,8 @@ export default function ProfessionalRiderDashboard() {
                 setStats(data.stats);
                 setChartData(data.chartData);
                 setProfile(data.profile);
-            } catch (error) {
-                console.error("Failed to fetch earnings", error);
+            } catch (error: any) {
+                logger.error("Failed to fetch earnings", error);
             } finally {
                 setLoading(false);
             }
@@ -146,7 +147,7 @@ export default function ProfessionalRiderDashboard() {
                         <p className="text-sm font-bold text-white truncate capitalize">{userData?.name}</p>
                         <p className="text-[10px] text-zinc-400 truncate">Approved Rider</p>
                     </div>
-                    <button 
+                    <button
                         onClick={() => signOut({ callbackUrl: '/' })}
                         className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors ml-auto"
                         title="Logout"

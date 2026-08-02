@@ -1,4 +1,5 @@
 'use client'
+import { logger } from "@/lib/logger";
 import React, { useState, useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from "motion/react";
 import Image from 'next/image';
@@ -72,8 +73,8 @@ const Navbar = () => {
         try {
             const { data } = await axios.get("/api/rider/booking/pending-request");
             setPendingCount(data.count || 0);
-        } catch (error) {
-            console.error("error in fetching pending count", error);
+        } catch (error: any) {
+            logger.error("error in fetching pending count", error);
             setPendingCount(0);
         }
     }
@@ -92,7 +93,7 @@ const Navbar = () => {
         if (userData?.role == "rider") {
             fetchPendingCount();
         }
-        
+
         const checkActiveBooking = async () => {
             if (userData?.role === "user") {
                 try {
@@ -102,8 +103,8 @@ const Navbar = () => {
                     } else {
                         setHasActiveBooking(false);
                     }
-                } catch (error) {
-                    console.error('Error checking active booking', error);
+                } catch (error: any) {
+                    logger.error('Error checking active booking', error);
                 }
             }
         };

@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import connectDb from "@/lib/db";
 import axios from "axios";
 import { NextRequest, NextResponse } from "next/server";
@@ -55,7 +56,7 @@ export async function POST(req: NextRequest) {
             data: parsedSuggestion
         });
     } catch (error) {
-        console.log(error);
+        logger.info(error);
         return NextResponse.json({ message: "Internal server error at get all ai suggestions", status: 500 });
     }
 }

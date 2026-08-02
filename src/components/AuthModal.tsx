@@ -6,13 +6,14 @@ import Image from 'next/image';
 import axios from 'axios';
 import { signIn, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { logger } from '../lib/logger';
 
 type propType = {
     open: boolean,
     onClose: () => void
 }
 
-type stepType = "login" | "signup" | "otp"
+type stepType = "login" | "signup" | "otp" | "forgot-password" | "reset-otp" | "new-password"
 
 const AuthModal = ({ open, onClose }: propType) => {
     const [step, setStep] = useState<stepType>("login");
@@ -25,6 +26,14 @@ const AuthModal = ({ open, onClose }: propType) => {
     const session = useSession();
     const router = useRouter();
     const handleSignup = async () => {
+        if (!name.trim() || !email.trim() || !password.trim()) {
+            setErrorMessage("All fields are required.");
+            return;
+        }
+        if (password.length < 6) {
+            setErrorMessage("Password must be at least 6 characters.");
+            return;
+        }
         try {
             setLoading(true);
             const { data } = await axios.post("/api/auth/register", {
@@ -34,12 +43,16 @@ const AuthModal = ({ open, onClose }: propType) => {
             setStep("otp");
             setLoading(false);
         } catch (error: any) {
-            console.error(error);
+            logger.error(error);
             setErrorMessage(error.response?.data?.message || "Signup failed");
             setLoading(false);
         }
     }
     const handleVerifyEmail = async () => {
+        if (!email.trim() || otp.join("").length < 6) {
+            setErrorMessage("Please enter the complete OTP.");
+            return;
+        }
         try {
             setLoading(true);
             const { data } = await axios.post("/api/auth/verify-email", {
@@ -49,18 +62,22 @@ const AuthModal = ({ open, onClose }: propType) => {
             setStep("login");
             setLoading(false);
         } catch (error: any) {
-            console.error(error);
+            logger.error(error);
             setErrorMessage(error.response?.data?.message || "Verification failed");
             setLoading(false);
         }
     }
     const handleLogin = async () => {
+        if (!email.trim() || !password.trim()) {
+            setErrorMessage("Email and password are required.");
+            return;
+        }
         try {
             setLoading(true);
             const res = await signIn("credentials", {
                 email, password, redirect: false
             })
-            if (res?.ok) {
+            if (res?.ok && !res?.error) {
                 // Refresh server components and navigate to home
                 router.refresh();
                 router.push('/');
@@ -70,31 +87,79 @@ const AuthModal = ({ open, onClose }: propType) => {
                 setPassword("");
                 setErrorMessage("");
             } else {
-                let msg = "Login failed";
-                if (res?.error === "user_not_found") {
+                let msg = "Invalid email or password.";
+                if (res?.error === "user_not_found" || res?.error?.includes("user_not_found") || res?.code === "user_not_found") {
                     msg = "No account found with this email.";
-                } else if (res?.error === "incorrect_password") {
+                } else if (res?.error === "incorrect_password" || res?.error?.includes("incorrect_password") || res?.code === "incorrect_password") {
                     msg = "Incorrect password. Please try again.";
-                } else if (res?.error === "CredentialsSignin") {
-                    msg = "Invalid email or password.";
-                } else if (res?.error) {
-                    if (res.error.includes("user_not_found")) {
-                        msg = "No account found with this email.";
-                    } else if (res.error.includes("incorrect_password")) {
-                        msg = "Incorrect password. Please try again.";
-                    } else {
-                        msg = res.error;
-                    }
+                } else if (res?.error !== "CredentialsSignin" && res?.error) {
+                    msg = res.error;
                 }
                 setErrorMessage(msg);
             }
             setLoading(false);
-        } catch (error) {
-            console.log(error);
-            setErrorMessage("An error occurred. Please try again.");
+        } catch (error: any) {
+            logger.error("Login error:", error);
+            // In case NextAuth throws an error object instead of returning it
+            let msg = "An error occurred. Please try again.";
+            if (error?.message?.includes("user_not_found") || error?.type === "user_not_found") {
+                msg = "No account found with this email.";
+            } else if (error?.message?.includes("incorrect_password") || error?.type === "incorrect_password") {
+                msg = "Incorrect password. Please try again.";
+            } else if (error?.message?.includes("CredentialsSignin")) {
+                msg = "Invalid email or password.";
+            }
+            setErrorMessage(msg);
             setLoading(false);
         }
     }
+
+    const handleForgotPassword = async () => {
+        if (!email.trim()) {
+            setErrorMessage("Email is required.");
+            return;
+        }
+        try {
+            setLoading(true);
+            await axios.post("/api/auth/forgot-password", { email });
+            setErrorMessage("");
+            setStep("reset-otp");
+            setLoading(false);
+        } catch (error: any) {
+            logger.error(error);
+            setErrorMessage(error.response?.data?.message || "Something went wrong");
+            setLoading(false);
+        }
+    };
+
+    const handleResetPassword = async () => {
+        if (!email.trim() || otp.join("").length < 6 || !password.trim()) {
+            setErrorMessage("All fields are required and OTP must be complete.");
+            return;
+        }
+        if (password.length < 6) {
+            setErrorMessage("Password must be at least 6 characters.");
+            return;
+        }
+        try {
+            setLoading(true);
+            await axios.post("/api/auth/reset-password", {
+                email,
+                otp: otp.join(""),
+                newPassword: password
+            });
+            setErrorMessage("");
+            setStep("login");
+            setLoading(false);
+            // reset fields
+            setPassword("");
+            setOtp(["", "", "", "", "", ""]);
+        } catch (error: any) {
+            logger.error(error);
+            setErrorMessage(error.response?.data?.message || "Reset failed");
+            setLoading(false);
+        }
+    };
 
     const handleGoogleLogin = async () => {
         await signIn("google");
@@ -197,6 +262,9 @@ const AuthModal = ({ open, onClose }: propType) => {
                                                     <Lock size={18} className='text-gray-500' />
                                                     <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder='Password' className='w-full bg-transparent outline-none text-sm' />
                                                 </div>
+                                                <div className='flex justify-end'>
+                                                    <div onClick={() => { setErrorMessage(""); setStep("forgot-password"); }} className='text-xs font-medium hover:underline cursor-pointer text-gray-500'>Forgot Password?</div>
+                                                </div>
                                                 {errorMessage && (<p className='text-red-500 text-sm font-medium'>{errorMessage}</p>)}
                                                 <button disabled={loading} onClick={handleLogin} className='w-full h-11 rounded-xl bg-black text-white font-semibold hover:bg-gray-900 transition flex items-center justify-center'>{!loading ? "Login" : <CircleDashed size={18} className='animate-spin' color='white' />}</button>
                                             </div>
@@ -252,6 +320,60 @@ const AuthModal = ({ open, onClose }: propType) => {
                                                 ))}
                                             </div>
                                             <button onClick={handleVerifyEmail} className='mt-6 w-full h-11 rounded-xl bg-black text-white font-semibold hover:text-gray-900 transition'>Verify and Create account</button>
+                                        </motion.div>
+                                    )}
+                                    {step === "forgot-password" && (
+                                        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
+                                            <h1 className='text-xl font-semibold'>Reset Password</h1>
+                                            <p className="text-sm text-gray-500 mt-2">Enter your email to receive an OTP.</p>
+                                            <div className='mt-5 space-y-4'>
+                                                <div className='flex items-center gap-3 border border-black/20 rounded-xl px-4 py-3'>
+                                                    <Mail size={18} className='text-gray-500' />
+                                                    <input value={email} onChange={(e) => setEmail(e.target.value)} type="text" placeholder='Email address' className='w-full bg-transparent outline-none text-sm' />
+                                                </div>
+                                                {errorMessage && (<p className='text-red-500 text-sm font-medium'>{errorMessage}</p>)}
+                                                <button disabled={loading} onClick={handleForgotPassword} className='w-full h-11 rounded-xl bg-black text-white font-semibold hover:bg-gray-900 transition flex items-center justify-center'>{!loading ? "Send OTP" : <CircleDashed size={18} className='animate-spin' color='white' />}</button>
+                                            </div>
+                                            <div onClick={() => { setErrorMessage(""); setStep("login"); }} className='mt-6 text-center text-sm font-medium hover:underline cursor-pointer'>Back to Login</div>
+                                        </motion.div>
+                                    )}
+
+                                    {step === "reset-otp" && (
+                                        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
+                                            <h2 className='text-xl font-semibold'>Enter OTP</h2>
+                                            <p className="text-sm text-gray-500 mt-2">Enter the OTP sent to your email.</p>
+                                            <div className="mt-6 flex justify-between gap-2">
+                                                {otp.map((digit, i) => (
+                                                    <input
+                                                        key={i}
+                                                        id={`otp-${i}`}
+                                                        value={digit}
+                                                        maxLength={1}
+                                                        inputMode="numeric"
+                                                        className="w-10 h-12 sm:w-12 text-center text-lg font-semibold rounded-xl bg-white border border-black/20 outline-none"
+                                                        onChange={(e) => handleChangeOtp(i, e.target.value)}
+                                                        onKeyDown={(e) => handleKeyDownOtp(e, i)}
+                                                        onPaste={handlePaste}
+                                                    />
+                                                ))}
+                                            </div>
+                                            <button onClick={() => { setErrorMessage(""); setStep("new-password"); }} className='mt-6 w-full h-11 rounded-xl bg-black text-white font-semibold hover:bg-gray-900 transition text-sm flex items-center justify-center'>Verify OTP</button>
+                                            <div onClick={() => { setErrorMessage(""); setStep("login"); }} className='mt-6 text-center text-sm font-medium hover:underline cursor-pointer'>Back to Login</div>
+                                        </motion.div>
+                                    )}
+
+                                    {step === "new-password" && (
+                                        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
+                                            <h1 className='text-xl font-semibold'>New Password</h1>
+                                            <p className="text-sm text-gray-500 mt-2">Enter your new password below.</p>
+                                            <div className='mt-5 space-y-4'>
+                                                <div className='flex items-center gap-3 border border-black/20 rounded-xl px-4 py-3'>
+                                                    <Lock size={18} className='text-gray-500' />
+                                                    <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder='New Password' className='w-full bg-transparent outline-none text-sm' />
+                                                </div>
+                                                {errorMessage && (<p className='text-red-500 text-sm font-medium'>{errorMessage}</p>)}
+                                                <button disabled={loading} onClick={handleResetPassword} className='w-full h-11 rounded-xl bg-black text-white font-semibold hover:bg-gray-900 transition flex items-center justify-center'>{!loading ? "Reset Password" : <CircleDashed size={18} className='animate-spin' color='white' />}</button>
+                                            </div>
                                         </motion.div>
                                     )}
                                 </div>

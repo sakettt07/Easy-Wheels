@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { auth } from "@/auth";
 import connectDb from "@/lib/db";
 import Booking from "@/models/booking.model";
@@ -64,7 +65,7 @@ export async function POST(request: NextRequest) {
         })
 
     } catch (error: any) {
-        console.log("Booking Create Error:", error.message || error)
+        logger.info("Booking Create Error:", error.message || error)
         return NextResponse.json({
             message: error.message || "Internal Server Error"
         }, { status: 500 })
