@@ -18,7 +18,7 @@ const Field = ({ label, value, icon }: { label: string; value?: string | null; i
     <div className='flex items-start gap-3 py-2.5 border-b border-zinc-50 last:border-0'>
         {icon && (
             <div className='w-6 h-6 rounded-md bg-zinc-100 flex items-center justify-center shrink-0 mt-0.5 text-zinc-400'>
-                {React.cloneElement(icon as React.ReactElement, { size: 12, strokeWidth: 2 })}
+                {React.cloneElement(icon as React.ReactElement<any>, { size: 12, strokeWidth: 2 })}
             </div>
         )}
         <div className='flex-1 min-w-0'>

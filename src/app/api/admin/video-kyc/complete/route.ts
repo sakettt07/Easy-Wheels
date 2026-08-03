@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
             { status: 200 }
         );
 
-    } catch (error) {
+    } catch (error: any) {
         logger.error("error in", error);
         return Response.json(
             {

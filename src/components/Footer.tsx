@@ -3,7 +3,7 @@ import React from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion } from 'motion/react'
-import { Twitter, Instagram, Facebook, Youtube, ArrowUpRight, Globe } from 'lucide-react'
+import { ArrowUpRight, Globe } from 'lucide-react'
 
 const navLinks = [
     { label: 'Home', href: '/' },

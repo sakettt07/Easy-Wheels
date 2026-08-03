@@ -19,7 +19,7 @@ const TabButton = ({ active, count, icon, onclick, children }: TabButtonProps) =
                 }`}
         >
             <span className={`${active ? 'text-white' : 'text-zinc-400'}`}>
-                {React.cloneElement(icon as React.ReactElement, { size: 14, strokeWidth: 2 })}
+                {React.cloneElement(icon as React.ReactElement<any>, { size: 14, strokeWidth: 2 })}
             </span>
             <span>{children}</span>
             <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full min-w-[20px] text-center leading-none

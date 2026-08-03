@@ -1,14 +1,13 @@
 import { logger } from "@/lib/logger";
 // Redux persistence middleware for client-side state persistence
 import { Middleware } from '@reduxjs/toolkit'
-import { RootState } from './store'
 
 const STORAGE_KEY = 'redux_state'
 
 /**
  * Load persisted state from localStorage
  */
-export const loadPersistedState: any = (): Partial<RootState> | undefined => {
+export const loadPersistedState: any = (): any => {
     try {
         if (typeof window === 'undefined') return undefined
         const serialized = localStorage.getItem(STORAGE_KEY)
@@ -23,7 +22,7 @@ export const loadPersistedState: any = (): Partial<RootState> | undefined => {
 /**
  * Persistence middleware that saves state to localStorage on every action
  */
-export const persistenceMiddleware: Middleware<{}, RootState> =
+export const persistenceMiddleware: Middleware =
     (store) => (next) => (action) => {
         const result = next(action)
 

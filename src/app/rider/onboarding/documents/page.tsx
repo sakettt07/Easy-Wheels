@@ -79,7 +79,7 @@ interface UploadBoxProps {
     doc: DocsType
     file: File | null
     uploadedUrl: string | null
-    inputRef: React.RefObject<HTMLInputElement>
+    inputRef: React.RefObject<HTMLInputElement | null>
     onChange: (doc: DocsType, file: File | null) => void
     onClear: (doc: DocsType) => void
 }

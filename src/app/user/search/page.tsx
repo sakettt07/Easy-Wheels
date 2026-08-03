@@ -2,11 +2,12 @@
 import { logger } from "@/lib/logger";
 /* eslint-disable react-hooks/set-state-in-effect */
 
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { Suspense, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeft, Bike, Car, Clock3, MapPin, Sparkles, Truck, Zap } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
-import SearchMap from '@/components/SearchMap'
+import dynamic from 'next/dynamic'
+const SearchMap = dynamic(() => import('@/components/SearchMap'), { ssr: false })
 import VehicleNearbyCard from '@/components/VehicleNearbyCard'
 import axios from 'axios'
 
@@ -39,7 +40,7 @@ type NearbyVehicle = {
   imageUrl?: string
 }
 
-const SearchPage = () => {
+const SearchPageContent = () => {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -486,5 +487,11 @@ const SearchPage = () => {
     </div>
   )
 }
+
+const SearchPage = () => (
+  <Suspense fallback={<div className="min-h-screen bg-zinc-50 flex items-center justify-center font-bold text-zinc-500">Loading route...</div>}>
+    <SearchPageContent />
+  </Suspense>
+)
 
 export default SearchPage

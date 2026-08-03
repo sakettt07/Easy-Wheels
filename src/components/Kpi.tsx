@@ -55,7 +55,7 @@ const Kpi = ({ label, value, icon, variant, index = 0 }: KpiProps) => {
             <div className='flex items-center justify-between'>
                 <p className='text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-400'>{label}</p>
                 <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${cfg.iconBg} ${cfg.iconColor}`}>
-                    {React.cloneElement(icon as React.ReactElement, { size: 15, strokeWidth: 2 })}
+                    {React.cloneElement(icon as React.ReactElement<any>, { size: 15, strokeWidth: 2 })}
                 </div>
             </div>
 

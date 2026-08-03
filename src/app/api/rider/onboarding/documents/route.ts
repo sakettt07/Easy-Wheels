@@ -96,7 +96,9 @@ export async function GET(req: NextRequest) {
             return Response.json(docs, { status: 200 })
         }
         else {
-            return null;
+            return Response.json({
+                message: "No documents found"
+            }, { status: 404 })
         }
     } catch (error) {
         return Response.json({
