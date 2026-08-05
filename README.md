@@ -14,7 +14,7 @@ Built with **Next.js 14 · TypeScript · MongoDB · Tailwind CSS · Socket.io ·
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38bdf8?style=flat-square&logo=tailwindcss)](https://tailwindcss.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](./LICENSE)
 
-[Live Demo](#) · [Report a Bug](../../issues) · [Request Feature](../../issues)
+[Live Demo](https://easy-wheels.vercel.app) · [Report a Bug](../../issues) · [Request Feature](../../issues)
 
 ---
 
