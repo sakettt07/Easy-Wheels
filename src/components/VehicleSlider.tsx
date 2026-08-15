@@ -160,7 +160,7 @@ const VehicleSlider = () => {
                     onMouseUp={handleMouseUp}
                     onMouseLeave={handleMouseUp}
                     onScroll={handleScroll}
-                    className='flex gap-4 overflow-x-auto pb-2 select-none'
+                    className='flex gap-4 overflow-x-auto pb-2 select-none -mx-6 px-6 sm:-mx-10 sm:px-10 hide-scrollbar'
                     style={{
                         scrollbarWidth: 'none',
                         msOverflowStyle: 'none',

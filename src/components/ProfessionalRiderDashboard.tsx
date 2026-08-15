@@ -8,7 +8,7 @@ import {
     LayoutDashboard, Wallet, FileText, Settings,
     LogOut, TrendingUp, DollarSign, Car, ChevronRight, Activity, Zap, Menu, X, Clock, Navigation, BookOpen,
     FerrisWheel,
-    LifeBuoy
+    LifeBuoy, Star, User, Calendar, MessageSquare, MapPin, IndianRupee, CheckCircle2, XCircle
 } from 'lucide-react';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart
@@ -28,6 +28,18 @@ export default function ProfessionalRiderDashboard() {
     const [activeMenu, setActiveMenu] = useState('overview');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [pendingCount, setPendingCount] = useState(0);
+
+    // Reviews State
+    const [reviewsData, setReviewsData] = useState<{ reviews: any[], averageRating: number, totalReviews: number }>({
+        reviews: [], averageRating: 0, totalReviews: 0
+    });
+    const [loadingReviews, setLoadingReviews] = useState(false);
+
+    // Pending Requests State
+    const [bookingRequests, setBookingRequests] = useState<any[]>([]);
+    const [loadingRequests, setLoadingRequests] = useState(false);
+    const [actionId, setActionId] = useState<string | null>(null);
+    const [actionType, setActionType] = useState<'accept' | 'reject' | null>(null);
 
     const fetchPendingCount = async () => {
         try {
@@ -71,12 +83,111 @@ export default function ProfessionalRiderDashboard() {
         fetchEarnings();
     }, []);
 
+    useEffect(() => {
+        if (activeMenu === 'reviews') {
+            const fetchReviews = async () => {
+                try {
+                    setLoadingReviews(true);
+                    const { data } = await axios.get("/api/rider/reviews");
+                    setReviewsData({
+                        reviews: data.reviews || [],
+                        averageRating: data.averageRating || 0,
+                        totalReviews: data.totalReviews || 0
+                    });
+                } catch (error: any) {
+                    logger.error("Error fetching rider reviews", error);
+                } finally {
+                    setLoadingReviews(false);
+                }
+            };
+            fetchReviews();
+        }
+    }, [activeMenu]);
+
+    const fetchPendingRequest = async () => {
+        try {
+            setLoadingRequests(true);
+            const { data } = await axios.get("/api/rider/booking/pending");
+            if (data.bookings) {
+                setBookingRequests(data.bookings);
+            }
+        } catch (error: any) {
+            logger.error("Error in fetching booking requests", error);
+        } finally {
+            setLoadingRequests(false);
+        }
+    };
+
+    useEffect(() => {
+        if (activeMenu === 'pending-requests') {
+            fetchPendingRequest();
+        }
+    }, [activeMenu]);
+
+    useEffect(() => {
+        const socket = getSocket();
+        socket.on("new-booking", (data: any) => {
+            fetchPendingCount();
+            if (activeMenu === 'pending-requests') {
+                fetchPendingRequest();
+            }
+        });
+        return () => {
+            socket.off("new-booking");
+        }
+    }, [activeMenu]);
+
+    const handleAccept = async (id: string) => {
+        try {
+            setActionId(id);
+            setActionType('accept');
+            await axios.get(`/api/rider/booking/${id}/accept`);
+            fetchPendingCount();
+            fetchPendingRequest();
+            setActiveMenu('active-rides');
+        } catch (error: any) {
+            logger.error("Error accepting booking", error);
+        } finally {
+            setActionId(null);
+            setActionType(null);
+        }
+    };
+
+    const handleReject = async (id: string) => {
+        try {
+            setActionId(id);
+            setActionType('reject');
+            await axios.post(`/api/rider/booking/${id}/reject`);
+            fetchPendingCount();
+            fetchPendingRequest();
+        } catch (error: any) {
+            logger.error("Error rejecting booking", error);
+        } finally {
+            setActionId(null);
+            setActionType(null);
+        }
+    };
+
+    const renderStars = (rating: number) => {
+        return (
+            <div className="flex gap-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                        key={star}
+                        className={`w-4 h-4 ${star <= rating ? 'fill-amber-400 text-amber-400' : 'fill-white/10 text-white/10'}`}
+                    />
+                ))}
+            </div>
+        );
+    };
+
     const navItems = [
         { id: 'overview', label: 'Overview', icon: LayoutDashboard },
         { id: 'documents', label: 'Documents & Vehicle', icon: FileText },
         { id: 'pending-requests', label: 'Pending Requests', icon: Clock },
         { id: 'active-rides', label: 'Active Rides', icon: Navigation },
         { id: 'bookings', label: 'Bookings', icon: BookOpen },
+        { id: 'reviews', label: 'Reviews', icon: Star },
         { id: 'settings', label: 'Settings', icon: Settings },
     ];
 
@@ -118,7 +229,7 @@ export default function ProfessionalRiderDashboard() {
                         <button
                             key={item.id}
                             onClick={() => {
-                                if (['pending-requests', 'active-rides', 'bookings'].includes(item.id)) {
+                                if (['active-rides', 'bookings'].includes(item.id)) {
                                     router.push(`/rider/${item.id}`);
                                 } else {
                                     setActiveMenu(item.id);
@@ -217,7 +328,10 @@ export default function ProfessionalRiderDashboard() {
                             <h1 className="text-3xl font-black text-white tracking-tight capitalize">{activeMenu.replace('-', ' ')}</h1>
                             <p className="text-sm text-zinc-400 mt-1">
                                 {activeMenu === 'overview' ? 'Track your earnings and manage your profile.' :
-                                    activeMenu === 'documents' ? 'View your uploaded vehicle, KYC, and bank details.' : 'Manage your account settings.'}
+                                    activeMenu === 'documents' ? 'View your uploaded vehicle, KYC, and bank details.' :
+                                        activeMenu === 'reviews' ? 'See what passengers are saying about your rides.' :
+                                            activeMenu === 'pending-requests' ? 'Review and accept new ride requests in your area.' :
+                                                'Manage your account settings.'}
                             </p>
                         </div>
                         <button
@@ -379,6 +493,211 @@ export default function ProfessionalRiderDashboard() {
                                     <p className="text-sm text-zinc-500">No documents found.</p>
                                 )}
                             </div>
+                        </div>
+                    )}
+
+                    {activeMenu === 'pending-requests' && (
+                        <div className="space-y-6">
+                            {loadingRequests ? (
+                                <div className="flex flex-col items-center justify-center py-20">
+                                    <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin mb-4"></div>
+                                    <p className="text-zinc-500 font-medium">Loading requests...</p>
+                                </div>
+                            ) : bookingRequests.length === 0 ? (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="flex flex-col items-center justify-center py-24 bg-[#121214] rounded-3xl border border-dashed border-white/10"
+                                >
+                                    <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6">
+                                        <Clock className="w-10 h-10 text-zinc-600" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-white mb-2">No Pending Requests</h3>
+                                    <p className="text-zinc-500 max-w-sm text-center">
+                                        You have no new ride requests at the moment. Keep your app open to receive new bookings.
+                                    </p>
+                                </motion.div>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <AnimatePresence>
+                                        {bookingRequests.map((booking, index) => (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 16 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, scale: 0.95 }}
+                                                transition={{ duration: 0.3, delay: index * 0.05 }}
+                                                key={booking._id}
+                                                className="bg-[#121214] rounded-3xl border border-white/5 flex flex-col overflow-hidden hover:border-white/20 transition-colors"
+                                            >
+                                                <div className="flex flex-col p-6 gap-6">
+                                                    {/* Locations */}
+                                                    <div className="space-y-5">
+                                                        <div className="flex items-start gap-3">
+                                                            <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center shrink-0 border border-white/5 mt-0.5">
+                                                                <MapPin size={14} className="text-zinc-400" />
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="text-[9px] font-black uppercase tracking-[0.15em] text-zinc-500 mb-0.5">Pickup</p>
+                                                                <p className="text-sm font-semibold text-white line-clamp-2 leading-relaxed">{booking.pickupAddress}</p>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex items-start gap-3">
+                                                            <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center shrink-0 border border-white/5 mt-0.5">
+                                                                <Navigation size={14} className="text-zinc-400" />
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="text-[9px] font-black uppercase tracking-[0.15em] text-zinc-500 mb-0.5">Drop-off</p>
+                                                                <p className="text-sm font-semibold text-white line-clamp-2 leading-relaxed">{booking.dropAddress}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Fare and Time */}
+                                                    <div className="flex justify-between items-center border-t border-white/5 pt-4 mt-2">
+                                                        <div>
+                                                            <p className="text-[9px] font-black uppercase tracking-[0.15em] text-zinc-500 mb-0.5">Est. Fare</p>
+                                                            <div className="flex items-center text-2xl font-black text-white tracking-tight">
+                                                                <IndianRupee size={18} className="mr-0.5 text-zinc-300" />
+                                                                {booking.fare}
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <p className="text-[9px] font-black uppercase tracking-[0.15em] text-zinc-500 mb-0.5">Requested</p>
+                                                            <div className="flex items-center justify-end text-xs font-semibold text-zinc-400 gap-1">
+                                                                <Clock size={12} className="text-zinc-500" />
+                                                                {new Date(booking.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Action Buttons */}
+                                                <div className="flex border-t border-white/5 divide-x divide-white/5">
+                                                    <button
+                                                        onClick={() => handleReject(booking._id)}
+                                                        disabled={actionId === booking._id}
+                                                        className="flex-1 py-4 flex items-center justify-center gap-2 bg-transparent hover:bg-white/5 text-zinc-400 hover:text-white text-xs font-black transition-colors disabled:opacity-50"
+                                                    >
+                                                        {actionId === booking._id && actionType === 'reject' ? (
+                                                            <div className="w-4 h-4 rounded-full border-2 border-zinc-500 border-t-white animate-spin" />
+                                                        ) : (
+                                                            <>
+                                                                <XCircle size={16} />
+                                                                Reject
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleAccept(booking._id)}
+                                                        disabled={actionId === booking._id}
+                                                        className="flex-1 py-4 flex items-center justify-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 text-xs font-black transition-colors disabled:opacity-50"
+                                                    >
+                                                        {actionId === booking._id && actionType === 'accept' ? (
+                                                            <div className="w-4 h-4 rounded-full border-2 border-emerald-500/30 border-t-emerald-500 animate-spin" />
+                                                        ) : (
+                                                            <>
+                                                                <CheckCircle2 size={16} />
+                                                                Accept Ride
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                </div>
+                                            </motion.div>
+                                        ))}
+                                    </AnimatePresence>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {activeMenu === 'reviews' && (
+                        <div className="space-y-6">
+                            {loadingReviews ? (
+                                <div className="flex flex-col items-center justify-center py-20">
+                                    <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin mb-4"></div>
+                                    <p className="text-zinc-500 font-medium">Loading reviews...</p>
+                                </div>
+                            ) : (
+                                <>
+                                    {/* Stats Banner */}
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="bg-[#121214] p-8 rounded-3xl border border-white/5 flex flex-col md:flex-row items-center md:items-start justify-between gap-6 mb-6"
+                                    >
+                                        <div className="flex items-center gap-6">
+                                            <div className="w-24 h-24 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0 border border-amber-500/20 shadow-md">
+                                                <span className="text-4xl font-black text-amber-500">{reviewsData.averageRating.toFixed(1)}</span>
+                                            </div>
+                                            <div>
+                                                <h2 className="text-xl font-bold text-white">Overall Rating</h2>
+                                                <div className="flex items-center gap-2 mt-2">
+                                                    {renderStars(Math.round(reviewsData.averageRating))}
+                                                    <span className="text-zinc-400 font-medium">({reviewsData.totalReviews} reviews)</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+
+                                    {/* Reviews Grid */}
+                                    {reviewsData.reviews.length > 0 ? (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <AnimatePresence>
+                                                {reviewsData.reviews.map((review: any, index: number) => (
+                                                    <motion.div
+                                                        key={review._id}
+                                                        initial={{ opacity: 0, scale: 0.95 }}
+                                                        animate={{ opacity: 1, scale: 1 }}
+                                                        transition={{ delay: index * 0.05 }}
+                                                        className="bg-[#121214] p-6 rounded-2xl border border-white/5 hover:border-white/20 transition-colors"
+                                                    >
+                                                        <div className="flex justify-between items-start mb-4">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center">
+                                                                    <User className="w-5 h-5 text-zinc-400" />
+                                                                </div>
+                                                                <div>
+                                                                    <p className="font-bold text-white capitalize">{review.user?.name || "Passenger"}</p>
+                                                                    <div className="flex items-center gap-1 mt-0.5 text-xs text-zinc-500 font-medium">
+                                                                        <Calendar className="w-3 h-3" />
+                                                                        {new Date(review.createdAt).toLocaleDateString()}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div className="bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20">
+                                                                {renderStars(review.rating)}
+                                                            </div>
+                                                        </div>
+
+                                                        {review.comment ? (
+                                                            <p className="text-zinc-300 leading-relaxed text-sm">
+                                                                "{review.comment}"
+                                                            </p>
+                                                        ) : (
+                                                            <p className="text-zinc-600 italic text-sm">No comment provided.</p>
+                                                        )}
+                                                    </motion.div>
+                                                ))}
+                                            </AnimatePresence>
+                                        </div>
+                                    ) : (
+                                        <motion.div
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            className="flex flex-col items-center justify-center py-24 bg-[#121214] rounded-3xl border border-dashed border-white/10"
+                                        >
+                                            <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6">
+                                                <MessageSquare className="w-10 h-10 text-zinc-600" />
+                                            </div>
+                                            <h3 className="text-xl font-bold text-white mb-2">No reviews yet</h3>
+                                            <p className="text-zinc-500 max-w-sm text-center">
+                                                Complete more rides to start receiving feedback from your passengers.
+                                            </p>
+                                        </motion.div>
+                                    )}
+                                </>
+                            )}
                         </div>
                     )}
 

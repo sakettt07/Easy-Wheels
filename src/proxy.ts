@@ -5,7 +5,7 @@ import { authConfig } from "./auth.config"
 const { auth } = NextAuth(authConfig)
 
 const public_routes = ["/"]
-const public_apis = ["/api/auth"]
+const public_apis = ["/api/auth", "/api/cron"]
 export async function proxy(req: NextRequest) {
     const { pathname } = req.nextUrl
     if (pathname.startsWith("/_next") || pathname.startsWith("/favicon.ico") || pathname.startsWith(".")) {
@@ -14,7 +14,7 @@ export async function proxy(req: NextRequest) {
     if (public_routes.includes(pathname)) {
         return NextResponse.next()
     }
-    if (pathname.startsWith("/api/auth")) {
+    if (public_apis.some(api => pathname.startsWith(api))) {
         return NextResponse.next();
     }
     const session = await auth();

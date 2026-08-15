@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 
 export interface IReview {
+    booking: mongoose.Types.ObjectId,
     user: mongoose.Types.ObjectId,
     rider: mongoose.Types.ObjectId,
     rating: number,
@@ -8,6 +9,11 @@ export interface IReview {
 }
 
 const reviewSchema = new mongoose.Schema<IReview>({
+    booking: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Booking",
+        required: true
+    },
     user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",

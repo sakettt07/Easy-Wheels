@@ -8,8 +8,6 @@ import { ArrowUpRight, Globe } from 'lucide-react'
 const navLinks = [
     { label: 'Home', href: '/' },
     { label: 'Bookings', href: '/bookings' },
-    { label: 'About Us', href: '/about-us' },
-    { label: 'Contact', href: '/contact' },
 ]
 
 const legalLinks = [

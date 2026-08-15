@@ -15,6 +15,7 @@ const filters = [
     { id: 'started', label: 'Active' },
     { id: 'completed', label: 'Completed' },
     { id: 'cancelled', label: 'Cancelled' },
+    { id: 'expired', label: 'Expired' },
 ];
 
 export default function RiderBookingsPage() {

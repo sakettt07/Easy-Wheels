@@ -6,6 +6,8 @@ import Provider from "@/lib/Provider";
 import ReduxProvider from "@/redux/ReduxProvider";
 import InitUser from "@/InitUser";
 
+import { Toaster } from 'react-hot-toast';
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -35,6 +37,7 @@ export default function RootLayout({
         <Provider>
           <ReduxProvider>
             <InitUser />
+            <Toaster position="top-center" />
             {children}
           </ReduxProvider>
         </Provider>

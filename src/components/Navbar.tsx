@@ -1,7 +1,7 @@
 'use client'
 import { logger } from "@/lib/logger";
 import React, { useState, useEffect, useRef } from 'react'
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useScroll, useMotionValueEvent } from "motion/react";
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -28,6 +28,18 @@ const Navbar = () => {
     const profileRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
 
+    const { scrollY } = useScroll();
+    const [hidden, setHidden] = useState(false);
+
+    useMotionValueEvent(scrollY, "change", (latest) => {
+        const previous = scrollY.getPrevious() ?? 0;
+        if (latest > 150 && latest > previous) {
+            setHidden(true);
+        } else {
+            setHidden(false);
+        }
+    });
+
     const currentNavItems = React.useMemo(() => {
         if (userData?.role === "rider") {
             return [
@@ -40,8 +52,7 @@ const Navbar = () => {
         return [
             { name: "Home", path: "/", icon: Home },
             { name: "Bookings", path: "/user/bookings", icon: BookOpen },
-            { name: "About Us", path: "/about-us", icon: Info },
-            { name: "Contact", path: "/contact", icon: Phone }
+
         ];
     }, [userData?.role]);
 
@@ -114,8 +125,13 @@ const Navbar = () => {
     return (
         <>
             <motion.div
-                initial={{ y: -60, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
+                variants={{
+                    visible: { y: 0, opacity: 1 },
+                    hidden: { y: "-150%", opacity: 0 }
+                }}
+                initial="visible"
+                animate={hidden ? "hidden" : "visible"}
+                transition={{ duration: 0.35, ease: "easeInOut" }}
                 className="fixed top-6 left-1/2 -translate-x-1/2 w-[94%] max-w-[1200px] z-50"
             >
                 <div className='flex items-center justify-between w-full bg-black/90 backdrop-blur-md border border-white/20 rounded-full px-6 py-3 shadow-[0_4px_30px_rgba(0,0,0,0.5)]'>
@@ -125,12 +141,12 @@ const Navbar = () => {
                         <Image
                             src="/navLogos.png"
                             alt="Navbar logo for easy wheels"
-                            width={48}
-                            height={48}
-                            className="object-contain drop-shadow-md w-10 h-10 md:w-12 md:h-12"
+                            width={50}
+                            height={50}
+                            className="object-contain drop-shadow-md w-12 h-12 hidden md:block"
                             priority
                         />
-                        <span className="text-white font-bold tracking-wide text-lg sm:text-xl hidden sm:block">EasyWheels</span>
+                        <span className="text-white font-bold tracking-wide text-lg block md:hidden">Easy Wheels</span>
                     </Link>
 
                     {/* Desktop Nav Items */}
@@ -168,7 +184,7 @@ const Navbar = () => {
                             {!userData ? (
                                 <button
                                     onClick={() => setAuthOpen(true)}
-                                    className='px-6 py-2.5 rounded-full bg-blue-600 text-white text-sm font-bold hover:bg-blue-500 transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(37,99,235,0.4)]'
+                                    className='px-6 py-2.5 rounded-full bg-[#0c223755] text-white text-sm font-bold hover:bg-[#130721] transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(37,99,235,0.4)]'
                                 >
                                     Get Started
                                     <ArrowRight size={16} className="-rotate-45" />

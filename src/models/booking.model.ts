@@ -30,6 +30,7 @@ export interface IBooking {
     pickupOTPExpire: Date,
     dropOTP: string,
     dropOTPExpire: Date,
+    isReviewed?: boolean,
     createdAt?: Date
     updatedAt: Date
 }
@@ -112,6 +113,10 @@ const bookingSchema = new mongoose.Schema<IBooking>({
     dropOTPExpire: {
         type: Date,
     },
+    isReviewed: {
+        type: Boolean,
+        default: false
+    }
 
 }, { timestamps: true });
 

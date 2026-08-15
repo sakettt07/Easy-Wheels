@@ -1,8 +1,9 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { MapPin, Calendar, Clock, User, Car, Phone, CheckCircle2 } from 'lucide-react';
+import { MapPin, Calendar, Clock, User, Car, Phone, CheckCircle2, MessageSquarePlus, ExternalLink } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import ReviewModal from './ReviewModal';
 
 interface BookingCardProps {
     booking: any;
@@ -18,6 +19,7 @@ const getStatusColor = (status: string) => {
         case 'completed': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
         case 'cancelled':
         case 'rejected': return 'bg-red-100 text-red-700 border-red-200';
+        case 'expired': return 'bg-neutral-100 text-neutral-500 border-neutral-200 opacity-75';
         default: return 'bg-zinc-100 text-zinc-700 border-zinc-200';
     }
 };
@@ -38,27 +40,64 @@ const getPaymentStatusColor = (status: string) => {
 const BookingCard: React.FC<BookingCardProps> = ({ booking, viewRole }) => {
     const router = useRouter();
     const formattedDate = new Date(booking.createdAt).toLocaleDateString('en-US', {
-        weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
+        weekday: 'short', month: 'short', day: 'numeric'
     });
-    
+
     const formattedTime = new Date(booking.createdAt).toLocaleTimeString('en-US', {
         hour: '2-digit', minute: '2-digit'
     });
 
     const displayAmount = viewRole === 'rider' ? (booking.riderAmount || booking.fare) : booking.fare;
 
+    const [isReviewModalOpen, setIsReviewModalOpen] = React.useState(false);
+
     return (
-        <motion.div 
+        <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl shadow-sm border border-neutral-100 overflow-hidden hover:shadow-md transition-shadow group"
+            className="bg-white rounded-2xl shadow-sm border border-neutral-100 overflow-hidden hover:shadow-md transition-shadow group relative"
         >
             {/* Header / Meta */}
             <div className="px-6 py-4 border-b border-neutral-100 flex flex-wrap items-center justify-between gap-4 bg-zinc-50/50">
-                <div className="flex items-center gap-3 text-sm text-zinc-500 font-medium">
+                <div className="flex items-center gap-3 text-sm text-zinc-500 font-medium relative">
                     <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4" /> {formattedDate}</span>
-                    <span className="w-1 h-1 rounded-full bg-zinc-300"></span>
+                    <span className="w-1 h-1 rounded-full bg-zinc-300 hidden sm:block"></span>
                     <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" /> {formattedTime}</span>
+
+                    {/* Minimal Action Icons */}
+                    {booking.bookingStatus === 'completed' && viewRole === 'user' && !booking.isReviewed && (
+                        <button
+                            onClick={() => setIsReviewModalOpen(true)}
+                            className="ml-2 group relative flex items-center justify-center w-8 h-8 rounded-full bg-amber-50 hover:bg-amber-100 transition-colors"
+                        >
+                            <span className="absolute inset-0 rounded-full animate-[ping_1.5s_ease-in-out_infinite] bg-amber-400 opacity-20"></span>
+                            <MessageSquarePlus className="w-4 h-4 text-black relative z-10" />
+                            {/* Tooltip */}
+                            <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap bg-zinc-800 text-white text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
+                                Provide Feedback
+                            </span>
+                        </button>
+                    )}
+
+                    {['confirmed', 'started'].includes(booking.bookingStatus) && (
+                        <button
+                            onClick={() => {
+                                if (viewRole === 'user') {
+                                    router.push(`/user/ride/${(booking as any)._id}`)
+                                } else {
+                                    router.push(`/rider/active-rides`)
+                                }
+                            }}
+                            className="ml-2 group relative flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 hover:bg-blue-100 transition-colors"
+                        >
+                            <span className="absolute inset-0 rounded-full animate-[ping_1.5s_ease-in-out_infinite] bg-blue-400 opacity-20"></span>
+                            <ExternalLink className="w-4 h-4 text-blue-500 relative z-10" />
+                            {/* Tooltip */}
+                            <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap bg-zinc-800 text-white text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
+                                View Active Ride
+                            </span>
+                        </button>
+                    )}
                 </div>
                 <div className="flex items-center gap-2">
                     {booking.paymentStatus && (
@@ -75,11 +114,11 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, viewRole }) => {
             {/* Main Content */}
             <div className="p-6">
                 <div className="flex flex-col lg:flex-row gap-8">
-                    
+
                     {/* Locations */}
                     <div className="flex-1 relative">
                         <div className="absolute left-[11px] top-6 bottom-6 w-0.5 border-l-2 border-dashed border-neutral-200"></div>
-                        
+
                         <div className="relative pl-8 mb-6">
                             <div className="absolute left-0 top-1 w-6 h-6 bg-zinc-100 rounded-full flex items-center justify-center">
                                 <div className="w-2.5 h-2.5 bg-zinc-800 rounded-full"></div>
@@ -103,13 +142,13 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, viewRole }) => {
 
                     {/* Details Right Side */}
                     <div className="flex-1 flex flex-col justify-between space-y-6">
-                        
+
                         {/* Opposite Party Details */}
                         <div>
                             <p className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-3">
                                 {viewRole === 'rider' ? 'Customer Details' : 'Rider Details'}
                             </p>
-                            
+
                             {viewRole === 'rider' && booking.user ? (
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center shrink-0">
@@ -133,7 +172,7 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, viewRole }) => {
                                             <Car className="w-6 h-6 text-zinc-600" />
                                         </div>
                                     )}
-                                    
+
                                     <div>
                                         <p className="font-bold text-zinc-900 capitalize">{booking.rider.name}</p>
                                         <div className="flex items-center gap-2 mt-0.5">
@@ -172,24 +211,20 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, viewRole }) => {
                         </button>
                     </div>
                 )}
-
-                {['confirmed', 'started'].includes(booking.bookingStatus) && (
-                    <div className="mt-6 pt-6 border-t border-neutral-100">
-                        <button
-                            onClick={() => {
-                                if (viewRole === 'user') {
-                                    router.push(`/user/ride/${(booking as any)._id}`)
-                                } else {
-                                    router.push(`/rider/active-rides`)
-                                }
-                            }}
-                            className="w-full bg-zinc-900 hover:bg-black text-white font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all"
-                        >
-                            View Active Ride Details
-                        </button>
-                    </div>
-                )}
             </div>
+
+            {viewRole === 'user' && booking.rider && (
+                <ReviewModal
+                    isOpen={isReviewModalOpen}
+                    onClose={() => setIsReviewModalOpen(false)}
+                    bookingId={booking._id}
+                    riderId={booking.rider._id}
+                    onSuccess={() => {
+                        // Optimistically hide the button
+                        booking.isReviewed = true;
+                    }}
+                />
+            )}
         </motion.div>
     );
 };

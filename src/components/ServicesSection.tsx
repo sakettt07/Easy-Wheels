@@ -109,17 +109,17 @@ const ServicesSection = () => {
                             whileInView={{ opacity: 1, x: 0 }}
                             viewport={{ once: true, margin: "-100px" }}
                             transition={{ delay: index * 0.1, duration: 0.5 }}
-                            className={`min-w-[85vw] sm:min-w-[320px] md:min-w-[360px] aspect-[4/5] rounded-[32px] p-8 flex flex-col justify-between relative overflow-hidden group snap-center border border-white/10 bg-gradient-to-b ${service.gradient}`}
+                            className={`min-w-[80vw] sm:min-w-[320px] md:min-w-[360px] aspect-[4/5] rounded-[32px] p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden group snap-center border border-white/10 bg-gradient-to-b ${service.gradient}`}
                         >
                             {/* Inner ambient glow */}
                             <div className="absolute inset-0 bg-neutral-950/80 group-hover:bg-neutral-950/60 transition-colors duration-500 z-0" />
                             
                             {/* Top Content */}
                             <div className="relative z-10">
-                                <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center mb-6">
-                                    <service.icon className="text-white" size={24} />
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center mb-4 sm:mb-6">
+                                    <service.icon className="text-white w-5 h-5 sm:w-6 sm:h-6" />
                                 </div>
-                                <h3 className="text-white text-3xl font-bold leading-tight mt-auto">
+                                <h3 className="text-white text-2xl sm:text-3xl font-bold leading-tight mt-auto">
                                     {service.headline.split(' ').map((word, i, arr) => (
                                         i === arr.length - 2 || i === arr.length - 1 ? (
                                             <span key={i} className="text-white">{word} </span>
@@ -131,11 +131,11 @@ const ServicesSection = () => {
                             </div>
 
                             {/* Bottom Content */}
-                            <div className="relative z-10 flex flex-col justify-end">
-                                <p className="text-white/60 text-sm mb-6 max-w-[90%]">
+                            <div className="relative z-10 flex flex-col justify-end mt-4">
+                                <p className="text-white/60 text-xs sm:text-sm mb-4 sm:mb-6 max-w-[95%]">
                                     {service.desc}
                                 </p>
-                                <h4 className="text-white font-bold text-xl flex items-center gap-2">
+                                <h4 className="text-white font-bold text-lg sm:text-xl flex items-center gap-2">
                                     {service.title}
                                 </h4>
                             </div>
