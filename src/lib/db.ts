@@ -1,18 +1,17 @@
 import { logger } from "@/lib/logger";
 import mongoose from "mongoose"
 
-const mongodbUrl = process.env.MONGODB_URI
-
-if (!mongodbUrl) {
-    throw new Error("DB url not found!!")
-}
-
 let cached = global.mongooseConn
 if (!cached) {
     cached = global.mongooseConn = { conn: null, promise: null }
 }
 
 const connectDb = async () => {
+    const mongodbUrl = process.env.MONGODB_URI
+    if (!mongodbUrl) {
+        throw new Error("DB url not found!!")
+    }
+
     if (cached.conn) {
         return cached.conn;
     }
@@ -26,4 +25,4 @@ const connectDb = async () => {
         logger.error(error);
     }
 }
-export default connectDb; 
+export default connectDb;
