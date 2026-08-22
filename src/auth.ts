@@ -39,7 +39,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     throw new CustomAuthError("incorrect_password");
                 }
                 return {
-                    id: user._id,
+                    id: user._id.toString(),
                     email: user.email,
                     role: user.role,
                     name: user.name
@@ -63,7 +63,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                         email: user.email,
                     })
                 }
-                user.id = dbuser._id
+                user.id = dbuser._id.toString()
                 user.role = dbuser.role
             }
             return true;

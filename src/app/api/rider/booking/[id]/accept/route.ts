@@ -13,7 +13,7 @@ export async function GET(reque: NextRequest, context: { params: Promise<{ id: s
                 message: "Booking id is required"
             }, { status: 400 })
         }
-        const booking = await Booking.findById(id);
+        const booking = await Booking.findById(id).populate('user rider');
 
         if (!booking || booking.bookingStatus != "requested") {
             return Response.json({
@@ -25,9 +25,27 @@ export async function GET(reque: NextRequest, context: { params: Promise<{ id: s
         await booking.save();
         await axios.post(`${process.env.NEXT_PUBLIC_SOCKET_SERVER_URL}/emit`, {
             event: "booking-accepted",
-            to: booking.user,
+            to: booking.user._id,
             data: booking.bookingStatus
         })
+
+        // Trigger Google Calendar event creation
+        logger.info(`Checking if user has Google Calendar connected... User ID: ${booking.user._id}, Has token: ${!!booking.user.googleCalendarRefreshToken}`);
+        
+        if (booking.user && booking.user.googleCalendarRefreshToken) {
+            logger.info('Google Calendar refresh token found. Triggering createRideEvent...');
+            import('@/lib/googleCalendar').then(({ createRideEvent }) => {
+                createRideEvent(
+                    booking.user.googleCalendarRefreshToken,
+                    booking.rider ? booking.rider.name : 'your driver',
+                    booking.pickupAddress,
+                    booking.dropAddress
+                ).then(() => logger.info("Calendar event creation promise resolved!"))
+                 .catch(err => logger.error("Failed to create calendar event:", err));
+            });
+        } else {
+            logger.info('No Google Calendar refresh token found for this user. Skipping event creation.');
+        }
         return Response.json({
             message: "Booking accepted successfully"
         }, { status: 200 })

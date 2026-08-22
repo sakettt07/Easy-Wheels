@@ -22,9 +22,14 @@ export async function GET(req: NextRequest) {
         const bookings = await Booking.find({
             user: session.user.id,
         }).populate("user rider vehicle").sort({ createdAt: -1 })
+        
+        const dbUser = await User.findById(session.user.id);
+        const hasCalendarConnected = !!(dbUser && dbUser.googleCalendarRefreshToken);
+
         return NextResponse.json({
             message: "Fetch User pending bookings",
-            bookings: bookings
+            bookings: bookings,
+            hasCalendarConnected
         }, { status: 200 })
     } catch (error) {
         return NextResponse.json({

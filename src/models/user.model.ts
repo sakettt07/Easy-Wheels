@@ -25,6 +25,7 @@ export interface IUser extends Document {
     };
     isOnline: boolean;
     isBanned: boolean;
+    googleCalendarRefreshToken?: string;
 }
 
 const userSchema = new mongoose.Schema<IUser>({
@@ -97,6 +98,9 @@ const userSchema = new mongoose.Schema<IUser>({
     isBanned: {
         type: Boolean,
         default: false
+    },
+    googleCalendarRefreshToken: {
+        type: String
     }
 }, {
     timestamps: true

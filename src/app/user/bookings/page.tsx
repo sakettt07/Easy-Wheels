@@ -25,12 +25,17 @@ export default function UserBookingsPage() {
     const [activeFilter, setActiveFilter] = useState('all');
     const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
+    const [hasCalendarConnected, setHasCalendarConnected] = useState(false);
+
     const fetchBooking = async () => {
         try {
             setLoading(true);
             const { data } = await axios.get("/api/user/bookings");
             if (data?.bookings) {
                 setBookings(data.bookings);
+            }
+            if (data?.hasCalendarConnected !== undefined) {
+                setHasCalendarConnected(data.hasCalendarConnected);
             }
         } catch (error: any) {
             logger.error("Error fetching user bookings:", error);
@@ -49,6 +54,10 @@ export default function UserBookingsPage() {
         return booking.bookingStatus === activeFilter;
     });
 
+    const handleConnectCalendar = () => {
+        window.location.href = '/api/calendar/google/auth';
+    };
+
     return (
         <div
             className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 font-sans relative bg-neutral-50/50"
@@ -60,18 +69,44 @@ export default function UserBookingsPage() {
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-neutral-50/50 pointer-events-none"></div>
 
             <div className="max-w-7xl mx-auto relative z-10">
-                <div className="mb-10 flex items-center gap-4 border-b border-neutral-200/50 pb-8">
-                    <button
-                        onClick={() => router.back()}
-                        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-neutral-200/80 bg-white/50 backdrop-blur-sm shadow-sm transition-all hover:bg-white hover:shadow-md hover:border-neutral-300 active:scale-95 cursor-pointer"
-                        aria-label="Go back"
-                    >
-                        <ArrowLeft className="w-5 h-5 text-neutral-700" />
-                    </button>
-                    <div>
-                        <h1 className="text-4xl font-black text-neutral-900 tracking-tight">Your Rides</h1>
-                        <p className="text-neutral-500 mt-1.5 font-medium">Manage and view your ride history and upcoming requests.</p>
+                <div className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-neutral-200/50 pb-8">
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => router.back()}
+                            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-neutral-200/80 bg-white/50 backdrop-blur-sm shadow-sm transition-all hover:bg-white hover:shadow-md hover:border-neutral-300 active:scale-95 cursor-pointer"
+                            aria-label="Go back"
+                        >
+                            <ArrowLeft className="w-5 h-5 text-neutral-700" />
+                        </button>
+                        <div>
+                            <h1 className="text-4xl font-black text-neutral-900 tracking-tight">Your Rides</h1>
+                            <p className="text-neutral-500 mt-1.5 font-medium">Manage and view your ride history and upcoming requests.</p>
+                        </div>
                     </div>
+                    
+                    {!loading && (
+                        <div>
+                            {hasCalendarConnected ? (
+                                <div className="px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-200 font-bold text-sm flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                                    Calendar Connected
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={handleConnectCalendar}
+                                    className="px-5 py-2.5 bg-white text-zinc-900 border border-zinc-200 rounded-xl font-bold text-sm hover:bg-zinc-50 hover:shadow-sm transition-all flex items-center gap-2"
+                                >
+                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                        <path d="M16 2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                        <path d="M8 2V6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                        <path d="M3 10H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                    </svg>
+                                    Connect Google Calendar
+                                </button>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
