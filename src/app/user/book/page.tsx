@@ -281,6 +281,17 @@ const BookingPage = () => {
   const [dropPlace, setDropPlace] = useState<Place | null>(null)
   const [locLoading, setLocLoading] = useState(false)
   const [locError, setLocError] = useState('')
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const v = params.get('vehicle');
+      const p = params.get('pickup');
+      const d = params.get('drop');
+      if (v) setVehicle(v);
+      if (p) setPickupText(p);
+      if (d) setDropText(d);
+    }
+  }, []);
 
   const progress = useMemo(
     () => [!!vehicle, mobile.length === 10, !!pickupPlace, !!dropPlace].filter(Boolean).length,

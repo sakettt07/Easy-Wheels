@@ -8,7 +8,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import AuthModal from './AuthModal';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/redux/store';
-import { Bike, Car, ChevronRight, Home, BookOpen, Info, Phone, LogOut, Menu, Truck, User, Clock, Navigation, ArrowRight } from 'lucide-react';
+import { Bike, Car, ChevronRight, Home, BookOpen, Info, Phone, LogOut, Menu, Truck, User, Clock, Navigation, ArrowRight, Shield } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { setUserData } from '@/redux/userSlice';
 import axios from 'axios';
@@ -46,13 +46,21 @@ const Navbar = () => {
                 { name: "Home", path: "/", icon: Home },
                 { name: "Pending Requests", path: "/rider/pending-requests", icon: Clock },
                 { name: "Active Rides", path: "/rider/active-rides", icon: Navigation },
-                { name: "Bookings", path: "/rider/bookings", icon: BookOpen },
+                { name: "Rides", path: "/rider/bookings", icon: BookOpen },
+                { name: "Safety", path: "/safety", icon: Shield },
+            ];
+        }
+        if (userData?.role === "admin") {
+            return [
+                { name: "Home", path: "/", icon: Home },
+                { name: "Dashboard", path: "/admin/dashboard", icon: Navigation },
+                { name: "Safety", path: "/safety", icon: Shield },
             ];
         }
         return [
             { name: "Home", path: "/", icon: Home },
-            { name: "Bookings", path: "/user/bookings", icon: BookOpen },
-
+            { name: "Rides", path: "/user/bookings", icon: BookOpen },
+            { name: "Safety", path: "/safety", icon: Shield },
         ];
     }, [userData?.role]);
 
@@ -208,7 +216,7 @@ const Navbar = () => {
                                                 <div className='p-6'>
                                                     <p className='font-semibold text-lg'>{userData.name}</p>
                                                     <p className='text-xs uppercase text-gray-500 mb-4'>{userData.role}</p>
-                                                    {userData.role !== "rider" && (
+                                                    {userData.role === "user" && (
                                                         <button onClick={() => router.push("/rider/onboarding/vehicle")} className='w-full px-3 flex items-center gap-3 py-3 hover:bg-gray-100 rounded-xl transition'>
                                                             <div className='flex -space-x-2'>
                                                                 <div className='w-6 h-6 rounded-full bg-black text-white flex items-center justify-center'><Bike size={14} /></div>
@@ -362,7 +370,7 @@ const Navbar = () => {
                                     </motion.button>
                                 ) : (
                                     <>
-                                        {userData.role !== "rider" && (
+                                        {userData.role === "user" && (
                                             <motion.button onClick={() => router.push("/rider/onboarding/vehicle")}
                                                 initial={{ opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}

@@ -14,11 +14,21 @@ export default function ProtectedLayout({ children, allowedRole }: { children: R
 
     useEffect(() => {
         if (status === 'unauthenticated') {
-            toast.error("Please login to access")
+            toast.error("Please log in to continue")
             router.push('/')
         } else if (status === 'authenticated') {
             if (allowedRole && userData?.role && userData.role !== allowedRole) {
-                toast.error(`Access denied. Must be a ${allowedRole}.`)
+                if (allowedRole === 'user' && userData.role === 'rider') {
+                    toast.error("This section is reserved for passengers. Rider accounts cannot book rides.")
+                } else if (allowedRole === 'user' && userData.role === 'admin') {
+                    toast.error("Administrator account detected. Please use a passenger account to book rides.")
+                } else if (allowedRole === 'rider') {
+                    toast.error("Rider onboarding required. Please complete registration to access the driver portal.")
+                } else if (allowedRole === 'admin') {
+                    toast.error("Access restricted. Administrator privileges required.")
+                } else {
+                    toast.error(`Access restricted. Requires a ${allowedRole} account.`)
+                }
                 router.push('/')
             } else {
                 setIsChecking(false)
